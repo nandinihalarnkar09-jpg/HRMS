@@ -228,44 +228,60 @@ Letters are changed to capitals and spaces removed before checking. A failed che
 | Rule | Field | Format and regex | Valid example | Invalid example |
 |---|---|---|---|---|
 | D1 | PAN | 5 letters, 4 digits, 1 letter: `^[A-Z]{5}[0-9]{4}[A-Z]$`. Shown as ABCDE\*\*\*\*F | ABCDE1234F | ABC123 (too short) |
-| D2 | Aadhaar | 12 digits: `^[0-9]{12}$`. Stored in full, shown only as XXXX XXXX 1234, including in CSV | 123456781234 | 12345678123 (11 digits) |
+| D2 | Aadhaar | 12 digits, first digit 2–9: `^[2-9][0-9]{11}$`. Stored in full, shown only as XXXX XXXX 1234, including in CSV | 234567891234 | 12345678123 (11 digits), 123456789012 (starts with 1) |
 | D3 | UAN | 12 digits: `^[0-9]{12}$`. Optional: may be left blank for new joiners | 100123456789 or blank | 10012345678A (letter) |
 | D4 | IFSC | 4 letters, then 0, then 6 letters or digits: `^[A-Z]{4}0[A-Z0-9]{6}$` | SBIN0001234 | SBIN1001234 (5th character not 0) |
 | D5 | Mobile | 10 digits starting 6–9: `^[6-9][0-9]{9}$` | 9876543210 | 987654321 (9 digits), 5876543210 (starts with 5) |
-| D6 | PIN and state | PIN is 6 digits: `^[0-9]{6}$`. State is picked from a dropdown of the 28 states and 8 union territories, never typed | 403001, Goa | 40300 (5 digits) |
+| D6 | PIN and state | PIN is 6 digits, first digit 1–9: `^[1-9][0-9]{5}$`. State is picked from a dropdown of the 28 states and 8 union territories, never typed | 403001, Goa | 40300 (5 digits), 012345 (starts with 0) |
 | D7 | Minimum age | Date of birth must be on or before the joining date minus 18 years | Joins 1 Nov 2026, born 1 Nov 2008 (exactly 18) | Joins 1 Nov 2026, born 2 Nov 2008 (17) |
+
+*D7 source still to confirm — see open question 29.*
 
 Bank account numbers are shown as the last 4 digits only (for example XXXXXX4321). HR can see full values only by clicking Reveal, which is logged.
 
 ### Attendance rules (T1–T9)
 
 - **T1. One time zone.** All times are stored and shown in IST (Asia/Kolkata), whatever the server's or laptop's time zone. A punch belongs to its IST date. *Example:* a check-in at 00:30 IST on 5 Nov is 19:00 UTC on 4 Nov, but it is recorded on 5 Nov.
-- **T2. Weekly offs by location.** Panaji (head office) works Monday–Friday; Saturday and Sunday are weekly offs. Verna (plant) works Monday–Saturday; Sunday is the weekly off. *Example:* Saturday 7 Nov 2026 is a Weekly Off for a Panaji employee and a working day for a Verna employee.
-- **T3. Day status from hours worked.** Hours = check-out minus check-in. 8 hours or more = Present. 4 hours up to under 8 = Half Day. Under 4 hours = Absent. *Example:* 09:30–17:30 (8h 00m) = Present; 09:30–17:29 (7h 59m) = Half Day; 09:30–13:30 (4h 00m) = Half Day; 09:30–13:29 (3h 59m) = Absent.
+- **T2. Weekly offs by location.** *[Being revised — see open question 23]* Panaji (head office) works Monday–Friday; Saturday and Sunday are weekly offs. Verna (plant) works Monday–Saturday; Sunday is the weekly off. *Example:* Saturday 7 Nov 2026 is a Weekly Off for a Panaji employee and a working day for a Verna employee.
+- **T3. Day status from hours worked.** *[Being revised — see open question 25]* Hours = check-out minus check-in. 8 hours or more = Present. 4 hours up to under 8 = Half Day. Under 4 hours = Absent. *Example:* 09:30–17:30 (8h 00m) = Present; 09:30–17:29 (7h 59m) = Half Day; 09:30–13:30 (4h 00m) = Half Day; 09:30–13:29 (3h 59m) = Absent.
 - **T4. Missing punches.** No check-in on a working day = Absent. **[Interpretation]** A check-in with no check-out is also Absent until it is fixed through regularisation (T8). *Example:* checks in at 09:40, forgets to check out → Absent, until the manager approves a corrected check-out.
 - **T5. Late.** A check-in after 10:15:00 AM is Late; exactly 10:15:00 is on time. **[Interpretation]** Late does not apply on a WFH day or a day with approved first-half leave. *Example:* 10:15:00 = on time; 10:15:01 = Late; 10:20 = Late.
 - **T6. Late marks become LOP.** The 3rd Late mark in a calendar month adds 0.5 day of LOP. **[Interpretation]** Every further 3 Late marks (6th, 9th) add another 0.5 day. The count resets on the 1st of each month. *Example:* Late on 3, 10 and 17 Nov → 0.5 day LOP on 17 Nov. A Late on 2 Dec starts a new count of 1.
-- **T7. Work from home.** An employee marks a working day as WFH. It counts as Present, with no hours check, and is counted separately as a WFH day in the month-end CSV. **[Interpretation]** WFH can't be marked on a weekly off, holiday or leave day. *Example:* marks Tuesday as WFH and logs no punches → Present (WFH).
+- **T7. Work from home.** *[Being revised — see open question 26]* An employee marks a working day as WFH. It counts as Present, with no hours check, and is counted separately as a WFH day in the month-end CSV. **[Interpretation]** WFH can't be marked on a weekly off, holiday or leave day. *Example:* marks Tuesday as WFH and logs no punches → Present (WFH).
 - **T8. Regularisation.** For a missed or wrong punch, the employee requests corrected times with a reason. Attendance does not change until the manager approves; then the day is recalculated with T3. HR can correct a record directly, but must give a reason, which is logged. *Example:* forgot to check out on 4 Nov; requests 09:30–18:00 → still Absent while pending → Present once approved.
 - **T9. Holidays and which status wins.** Holidays are set per location and tagged National, State or Optional. A holiday added for one location never appears for the other. When several things apply to a day, the status is decided in this order: Holiday or Weekly Off → On Leave → WFH → punches (T3). *Example:* a State holiday added only for Verna shows as Holiday at Verna and as a normal working day at Panaji. An employee on approved leave who also punches in is On Leave.
+- **T9 edge cases.** **[Interpretation]**
+  - **One row per site.** Each holiday belongs to one location. A national holiday is entered once per site; Settings can offer "add to all locations", which creates one row for Panaji and one for Verna. Deleting it for one site leaves the other.
+  - **Holiday on a weekly off.** Nothing is given back. The day shows as Holiday (not Weekly Off) and is counted once, in the holidays column of the CSV.
+  - **Optional holidays.** An Optional holiday is a normal working day until an employee picks it. Once picked, it is a Holiday for that employee only.
+  - **Punching on a holiday.** *[Being revised — see open question 21]* The day stays Holiday. Konkan has no overtime or comp-off for holiday work in this project.
+
+  *Example:* Goa Liberation Day falls on Saturday 19 Dec 2026. At Panaji it replaces a weekly off, so no extra day is given. At Verna, Saturday is a working day, so it is a normal Holiday. Diwali on Sunday 8 Nov 2026 is a weekly off at both sites, so no extra day at either.
 
 ### Leave rules (L1–L14)
 
 Dates in examples are from 2026 unless stated, and assume no holidays unless one is named.
 
 - **L1. Leave year.** The leave year runs 1 January to 31 December. *Example:* leave taken on 31 Dec 2026 comes from the 2026 balance; leave on 1 Jan 2027 comes from 2027.
+- **L1 edge case: leave across 31 December.** **[Interpretation]** *[Being revised — see open questions 20 and 22]* The request is split by year. December days come from that year's balance; January days come from the new year's. The app saves it as two linked requests, approved together, so each year's balance and CSV stay correct. This matters because CL and SL lapse on 31 December. *Example:* Panaji employee takes CL from Wed 30 Dec 2026 to Mon 4 Jan 2027 → 2 days from 2026 CL (30, 31 Dec) and 2 days from 2027 CL (1 Jan, 4 Jan). Total 4 days.
 - **L2. Casual Leave (CL).** 8 days, credited on 1 January. Half day allowed. Unused CL lapses on 31 December. *Example:* 3 CL left on 31 Dec → 0 CL carried over; 8 new CL on 1 Jan.
 - **L3. Sick Leave (SL).** 7 days, credited on 1 January. Half day allowed. Unused SL lapses on 31 December. *Example:* 7 SL unused on 31 Dec → 0 carried over; 7 new SL on 1 Jan.
 - **L4. CL and SL for joiners.** **[Interpretation]** Credit = yearly quota × months left in the year ÷ 12. The joining month counts if the employee joins on or before the 15th. The result is rounded down to the nearest half day. *Example:* joins 1 July (6 months) → 4 CL and 3.5 SL. Joins 15 June (7 months) → 4.67 → 4.5 CL; 4.08 → 4 SL. Joins 16 June (6 months) → 4 CL and 3.5 SL.
 - **L5. Earned Leave (EL) accrual.** 1.25 days for each completed month of service (15 a year). No half day. **[Interpretation]** A completed month is a full calendar month; EL is credited on its last day. The joining month counts only if the employee joined on the 1st. *Example:* joins 1 July → first 1.25 EL on 31 July, 7.5 EL by 31 Dec. Joins 15 June → June doesn't count, first 1.25 EL on 31 July, 7.5 EL by 31 Dec. Employed all year → 15 EL by 31 Dec.
 - **L6. EL carry-forward.** Up to 30 days of EL carry into the next year. **[Interpretation]** Any excess is flagged in the December summary for the payroll vendor to encash, as the OSH Code requires for plant workers. *Example:* 36 EL on 31 Dec → opening EL of 30 on 1 Jan, and 6 days flagged for encashment.
 - **L7. Maternity Leave.** As the law sets (Code on Social Security, s.60): 26 weeks if the employee has fewer than two surviving children (up to 8 before delivery); 12 weeks if two or more (up to 6 before); 12 weeks from handover for adoption or a commissioning mother. She must have worked at least 80 days in the 12 months before the expected delivery. No half day. **[Interpretation]** Counted in calendar days, not working days. *Example:* first child, leave starting 1 Dec 2026 → 182 calendar days, ending 31 May 2027.
-- **L8. Paternity Leave.** 5 working days, on request, from the brief's company policy (not the law). No half day. *Example:* Panaji employee starts Thursday 12 Nov → Thu, Fri, Mon, Tue, Wed → back on Thursday 19 Nov.
+- **L8. Paternity Leave.** *[Being revised — see open question 27]* 5 working days, on request, from the brief's company policy (not the law). No half day. *Example:* Panaji employee starts Thursday 12 Nov → Thu, Fri, Mon, Tue, Wed → back on Thursday 19 Nov.
 - **L9. Loss of Pay (LOP).** Unlimited, half day allowed. No balance is kept. *Example:* an employee with no CL left takes 2 days of LOP; both are listed as LOP in the month-end CSV.
 - **L10. Counting leave days.** Only working days at the employee's location count (T2). Holidays at that location never count. There is no sandwich rule. A half day counts as 0.5, and is allowed only for CL, SL and LOP. *Example:* Fri 13 Nov to Mon 16 Nov → 2 days at Panaji (Fri, Mon), 3 days at Verna (Fri, Sat, Mon). Wed 23 to Mon 28 Dec, with Christmas on Friday 25 Dec → 3 days at Panaji (Wed, Thu, Mon), 4 at Verna (Wed, Thu, Sat, Mon).
+- **L10 edge cases.** **[Interpretation]**
+  - **Half day and holidays.** Half-day leave can only be taken on a working day; it can't be applied on a holiday or weekly off. Holidays are always full days.
+  - **Optional holidays.** An unpicked Optional holiday counts as a leave day; a picked one doesn't.
+  - **Location change.** Each leave day is counted using the location the employee belongs to on that date, so HR records a location change with an effective date. If the location changes while a request is pending, the app recounts the days and shows the new count to the employee and manager before approval.
+
+  *Examples:* Half-day CL on Thursday 24 Dec (before Christmas on Friday) = 0.5 day. Leave Mon–Fri with an Optional holiday on Wednesday = 5 days if not picked, 4 if picked. Moves from Panaji to Verna from Mon 16 Nov, leave Fri 13–Sat 21 Nov = 1 day at Panaji (Fri 13) + 6 days at Verna (Mon 16–Sat 21) = 7 days.
 - **L11. Not enough balance.** An employee can't apply for more days than they have available. The app offers to turn the extra days into LOP. *Example:* 1 CL available, applies for 3 days of CL → app offers 1 CL + 2 LOP.
 - **L12. Medical certificate.** SL of more than 2 consecutive days needs a certificate upload before the request can be submitted. **[Interpretation]** Days are counted as leave days under L10. *Example:* SL Mon–Wed (3 days) → certificate required. SL Fri + Mon at Panaji (2 days) → not required.
-- **L13. Balance terms.** For each leave type:
+- **L13. Balance terms.** *[Being revised — see open question 28]* For each leave type:
   - **Opening** = days carried over from last year on 1 January. Only EL has an opening balance (up to 30); CL and SL always start at 0.
   - **Accrued** = days credited this year: CL and SL on 1 January (or on joining, L4); EL at 1.25 per completed month so far (L5).
   - **Used** = days in approved requests, past or future.
@@ -300,6 +316,22 @@ Each [Interpretation] above is listed here with my proposed answer, plus two leg
 | 11 | Are "more than 2 consecutive days" of SL counted in leave days or calendar days? | Leave days (Fri + Mon = 2) | L12 |
 | 12 | Who approves leave for someone with no manager, and for the HR Admin? | HR Admin for the first; HR Admin's own manager for the second | L14 |
 | 13 | How many Optional holidays can each employee take, and how do they pick them? | Needs a faculty answer; not yet built into the rules | T9 |
+| 14 | If a holiday falls on a weekly off, is anything given back? | No; it shows as Holiday | T9 |
+| 15 | Is an Optional holiday a working day for leave until someone picks it? | Yes | T9, L10 |
+| 16 | How does a half day interact with a holiday? | Half-day leave only on working days; holidays are full days | L10 |
+| 17 | Is leave across 31 December split between years or charged to one? | Split into two linked requests, one per year | L1 |
+| 18 | If an employee changes location while a request is pending, which calendar counts? | The location on each leave date; recount before approval | L10 |
+| 19 | Is a national holiday entered once for both sites, or once per site? | Once per site, with an "add to all locations" shortcut | T9 |
+| 20 | For leave across 31 December, can next year's credit be booked before 1 January? | Yes, it can be booked early. Still to decide: whether EL can be, how far ahead, and what happens if the balance falls short | L1, L11, L13 |
+| 21 | How is work on a holiday recorded? | New status "Overtime", hours worked in a month-end CSV column, at both sites. Still to decide: weekly offs too, the name, its place in T9's order | T9 |
+| 22 | What follows from splitting leave across 31 December? | The January half can still be cancelled after the December half has started; L12 counts the linked pair together. Still to decide: whether maternity is split | L1, L12, L14 |
+| 23 | Do weekly offs and holidays also use the location on each date? | Yes, T2 and T9 use the location on that date, as L10 does | T2, T9, L10 |
+| 24 | Does picking an Optional holiday need approval, and what if it falls inside approved leave? | The reporting manager approves; a pick inside approved leave recounts the request and refunds that day | T9, L10 |
+| 25 | What do Half Day and Absent cost? | The brief's thresholds stay. With no approved leave, Half Day = 0.5 LOP and Absent = 1 LOP. Still to decide: reversal after back-dated leave; half-day leave plus a half day worked | T3 |
+| 26 | Does WFH need approval? | Yes: the reporting manager, then the manager's reporting senior. Still to decide: order and rejection, no skip-level manager, status while pending | T7 |
+| 27 | Is paternity leave 5 days per year or per birth? | Per birth. Still to decide: birth-date field, time limit, adoption | L8 |
+| 28 | Do the balance terms apply to every leave type? | Yes, with terms per type: LOP has no opening, accrued or limit, only days taken; maternity is an entitlement per event, granted with approval and documents. Still to decide: LOP from requests, which document, who checks 80-day eligibility | L13 |
+| 29 | Where does the minimum joining age of 18 come from? | To confirm (brief or own choice) | D7 |
 
 ---
 
