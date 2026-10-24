@@ -1,0 +1,12 @@
+node_modules/
+.next/
+out/
+build/
+coverage/
+.vercel/
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+tests/agent/results-*.md
