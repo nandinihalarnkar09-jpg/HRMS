@@ -1,12 +1,23 @@
-node_modules/
-.next/
-out/
-build/
-coverage/
-.vercel/
+# dependencies
+/node_modules
+# next.js
+/.next/
+/out/
+/build
+# env files: never commit secrets (.env.example IS committed)
 .env
 .env.local
 .env.*.local
-*.log
+.env.development
+.env.production
+# misc
 .DS_Store
+*.pem
+npm-debug.log*
+*.tsbuildinfo
+next-env.d.ts
+.vercel
+/coverage
+/.pglite
+/test-results
 tests/agent/results-*.md
