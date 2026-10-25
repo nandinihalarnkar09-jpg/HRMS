@@ -8,7 +8,7 @@
 
 ## 1. Brand
 
-**Logo:** a rounded-square tile in sea teal, with two white wave lines and a small coral sun
+**Logo:** a rounded-square tile with a blue-to-navy gradient, two wave lines (white and light blue) and a small light-blue sun
 (`public/logo.svg`, also used as the favicon `app/icon.svg`). The wordmark "Lehar HR" is set in the
 UI font, semibold, followed by the subtitle "Konkan Coastal Foods".
 
@@ -22,40 +22,43 @@ UI font, semibold, followed by the subtitle "Konkan Coastal Foods".
 
 ## 2. Design tokens
 
-### Colour palette (all text pairs meet WCAG AA, ≥ 4.5:1)
+### Colour palette: blue and white only
+
+The interface uses **only blue and white** (requested by the client for a professional look). Red is kept for one
+purpose: form and system **error messages**, because users read red as "something is wrong" and it is an accessibility aid.
+All text pairs meet WCAG AA (≥ 4.5:1).
 
 | Token | Hex | Use | Contrast |
 |---|---|---|---|
-| `--brand` | `#0F766E` | Primary buttons, active nav, links | 5.5:1 on white |
-| `--brand-strong` | `#115E59` | Button hover | 7.6:1 on white |
-| `--brand-soft` | `#CCFBF1` | Selected rows, chips | n/a (background) |
-| `--accent` | `#EA580C` | Logo sun, the one highlight on the dashboard | 3.6:1 (decorative only, never body text) |
-| `--ink` | `#0F172A` | Body text | 17:1 on white |
-| `--muted` | `#475569` | Secondary text, labels | 7.5:1 on white |
-| `--line` | `#E2E8F0` | Borders, dividers | n/a |
-| `--surface` | `#F8FAFC` | Page background | n/a |
-| `--card` | `#FFFFFF` | Cards | n/a |
-| `--danger` | `#B91C1C` | Errors, destructive buttons | 6.5:1 on white |
-| `--success` | `#15803D` | Success toasts | 5.0:1 on white |
+| `--brand` | `#1D4ED8` | Primary buttons, links, active items | 6.7:1 on white |
+| `--brand-strong` | `#1E40AF` | Button hover | 8.6:1 on white |
+| `--brand-soft` | `#DBEAFE` | Selected rows, chips | n/a (background) |
+| `--brand-50` | `#EFF6FF` | Tinted panels, table headers | n/a (background) |
+| `--navy` / `--navy-2` | `#0B1F4D` / `#1E3A8A` | Sidebar, hero banners (white text) | 16:1 / 10:1 with white |
+| `--ink` | `#0F1E3D` | Body text | 17:1 on white |
+| `--muted` | `#4A5B7A` | Secondary text | 6.9:1 on white |
+| `--line` | `#DCE6F5` | Borders | n/a |
+| `--surface` | `#F4F7FD` | Page background | n/a |
+| `--danger` | `#B91C1C` | Error messages only | 6.5:1 on white |
 
 ### Status colours: used identically on every screen
 
-Each status has a **colour, a short code and a label**, so colour is never the only signal
-(colour-blind safe). Implemented once in `components/ui/status-badge.tsx` and `lib/core/status.ts`.
+Every status has a **short code** and a **distinct blue treatment** (fill, outline or dashed border), so it is
+never colour-only. Implemented once in `components/ui.tsx` (`STATUS_META`).
 
-| Status | Code | Background | Text | Contrast |
-|---|---|---|---|---|
-| Present | `P` | `#DCFCE7` | `#166534` | 6.5:1 |
-| Present (WFH) | `WFH` | `#DCFCE7` | `#166534` | 6.5:1 |
-| Half Day | `HD` | `#FEF3C7` | `#92400E` | 6.4:1 |
-| Absent | `A` | `#FEE2E2` | `#991B1B` | 6.8:1 |
-| On Leave | `L` | `#DBEAFE` | `#1E40AF` | 7.1:1 |
-| Holiday | `HOL` | `#F3E8FF` | `#6B21A8` | 7.4:1 |
-| Weekly Off | `WO` | `#F1F5F9` | `#475569` | 6.9:1 |
-| Late (tag) | `LATE` | `#FFEDD5` | `#9A3412` | 6.2:1 |
-| In progress (today) | `…` | `#CCFBF1` | `#115E59` | 6.9:1 |
+| Status | Code | Style | Contrast |
+|---|---|---|---|
+| Present | `P` | light blue fill `#DBEAFE`, navy text `#1E3A8A` | 9:1 |
+| Present (WFH) | `WFH` | same as Present, labelled WFH | 9:1 |
+| Half Day | `HD` | pale blue fill, **dashed** blue border, blue text | 6.2:1 |
+| Absent | `A` | **solid navy** `#1E3A8A`, white text | 10:1 |
+| On Leave | `L` | **solid blue** `#2563EB`, white text | 5.2:1 |
+| Holiday | `HOL` | white, **solid blue outline**, blue text | 6.7:1 |
+| Weekly Off | `WO` | near-white `#F4F7FD`, grey-blue text | 6.4:1 |
+| Late (tag) | `LATE` | `#BFDBFE` fill, deep navy text (calendar: navy chip) | 12:1 |
+| In progress | `…` | white, light blue outline | 6.7:1 |
 
-Request status badges: **Pending** amber, **Approved** green, **Rejected** red, **Cancelled** slate (same pairs as above).
+Request badges: **Pending** = white with dashed blue border · **Approved** = solid blue · **Rejected** = solid navy · **Cancelled** = grey-blue.
 
 ### Typography
 - **Font:** the system UI font (Segoe UI on Windows, San Francisco on Mac, Roboto on Android). No web font is downloaded, so the app also works fully offline. Numbers use `tabular-nums` so balances line up.
@@ -85,7 +88,13 @@ Request status badges: **Pending** amber, **Approved** green, **Rejected** red, 
 
 ---
 
-## 3. Navigation
+## 3. Public pages and sign-in
+
+- **Start page (`/welcome`)**: shown to signed-out visitors. Blue gradient hero with the product promise and a preview card, a stats strip, six feature cards, "How it works" in three steps, a call to action and a footer.
+- **Sign-in (`/sign-in`)**: split layout. On the left (desktop), a blue brand panel with four promises; on the right, a white form. Offline mode uses an email + password form with show/hide and a "Demo accounts" panel that fills the form in one tap; online mode shows Clerk's sign-in, themed blue.
+- **Signed-in shell**: navy gradient sidebar (white text, active item = white pill), a slim white top bar with today's IST date and the user's initials, and a blue greeting banner on Home. On phones the sidebar becomes a navy top bar with a slide-in menu.
+
+## 3a. Navigation
 
 Desktop: a fixed left sidebar. Phone: a top bar with the logo and a menu button that opens the sidebar as a drawer.
 Menu items appear only for the roles that may use them; **the server still checks every request**.

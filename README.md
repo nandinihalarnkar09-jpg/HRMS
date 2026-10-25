@@ -33,7 +33,7 @@ The seed creates 20 employees. In a **Clerk development instance**, any email co
 Sign in → enter the email → **Email code** → `424242`. (The other 11 employees follow the same
 `first.last+clerk_test@example.com` pattern. `npm run db:setup` prints them all.)
 
-> Local shortcut: with `AUTH_MODE=dev` in `.env.local`, `npm run dev` shows a "pick a user" page
+> Local shortcut: with `AUTH_MODE=dev` in `.env.local`, `npm run dev` uses the offline email + password sign-in
 > instead of Clerk. It is **switched off automatically in production** (`NODE_ENV=production` or on Vercel).
 
 ---
@@ -42,7 +42,21 @@ Sign in → enter the email → **Email code** → `424242`. (The other 11 emplo
 
 Double-click **`Start Lehar HR (offline).cmd`**. The first run installs packages (internet needed once) and creates
 a local database with the sample company in `.pglite/`. After that it runs with **no internet**: the browser opens
-http://localhost:3000, where you pick any of the 20 test users. Close the black window to stop.
+http://localhost:3000 (the start page) → **Sign in**. Close the black window to stop.
+
+**Offline sign-in credentials** (password for everyone = `firstname@KCF2026`):
+
+| Role | Email | Password |
+|---|---|---|
+| HR Admin | `priya.naik+clerk_test@example.com` | `priya@KCF2026` |
+| Manager (GM) | `vikram.sardesai+clerk_test@example.com` | `vikram@KCF2026` |
+| Manager (plant) | `rohan.kamat+clerk_test@example.com` | `rohan@KCF2026` |
+| Manager (sales) | `sneha.dessai+clerk_test@example.com` | `sneha@KCF2026` |
+| Employee (plant) | `ravi.gaonkar+clerk_test@example.com` | `ravi@KCF2026` |
+| Employee (head office) | `aditya.prabhu+clerk_test@example.com` | `aditya@KCF2026` |
+| Exited (sign-in refused) | `nikhil.shet+clerk_test@example.com` | `nikhil@KCF2026` |
+
+The sign-in page also has a "Demo accounts" panel that fills these in with one tap. Passwords are stored as scrypt hashes.
 
 - Same rules, same screens, same seed data as the online version (it uses PGlite, a real Postgres engine that runs inside Node).
 - Emails are written to Settings → Email & agent log instead of being sent. The Ask HR assistant needs internet and an AI key.

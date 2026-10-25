@@ -6,6 +6,8 @@ import { redirect } from 'next/navigation';
 import { resolveActor, type ActorResult } from '@/lib/services/identity';
 import type { Actor } from '@/lib/core/authz';
 import { isDevAuth, DEV_COOKIE } from './dev';
+import { verifySession } from './password';
+import { getLocalSecret } from '@/lib/services/local-auth';
 
 export { isDevAuth };
 
@@ -13,7 +15,9 @@ type Identity = { email: string; clerkUserId: string | null };
 
 async function currentIdentity(): Promise<Identity | null> {
   if (isDevAuth()) {
-    const email = (await cookies()).get(DEV_COOKIE)?.value;
+    // Local sign-in: the cookie is an HMAC-signed, expiring token (lib/auth/password.ts)
+    const token = (await cookies()).get(DEV_COOKIE)?.value;
+    const email = verifySession(token, await getLocalSecret());
     return email ? { email, clerkUserId: null } : null;
   }
   const { auth, currentUser } = await import('@clerk/nextjs/server');
@@ -37,7 +41,7 @@ export const getActorResult = cache(async (): Promise<ActorResult | null> => {
  */
 export async function getActor(): Promise<Actor> {
   const r = await getActorResult();
-  if (!r) redirect(isDevAuth() ? '/dev-login' : '/sign-in');
+  if (!r) redirect('/sign-in');
   if (r.status !== 'ok') redirect(`/access-denied?reason=${r.status}`);
   return r.actor;
 }

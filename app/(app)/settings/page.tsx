@@ -4,7 +4,7 @@ import { getActor } from '@/lib/auth/actor';
 import * as s from '@/lib/services/settings';
 import { formatDate, formatDateTimeIST, todayIST, yearOf } from '@/lib/core/dates';
 import { ActionForm } from '@/components/settings-forms';
-import { Card, EmptyState, PageHeader, Table, cx, inputClass, td } from '@/components/ui';
+import { Card, EmptyState, PageHeader, RequestBadge, Table, cx, inputClass, td } from '@/components/ui';
 import {
   addDepartmentAction, addHolidayAction, addLocationAction, carryForwardAction, deleteHolidayAction,
   updateLeaveTypeAction, updatePolicyAction, weeklyOffsAction,
@@ -63,7 +63,7 @@ async function Holidays({ year, locations, actor }: { year: number; locations: s
               <tr key={h.id}>
                 <td className={`${td} whitespace-nowrap`}>{formatDate(h.date)}</td>
                 <td className={td}>{h.name}</td>
-                <td className={td}><span className={cx('rounded-full px-2 py-0.5 text-xs font-semibold', h.type === 'OPTIONAL' ? 'bg-slate-100 text-muted' : 'bg-[#F3E8FF] text-[#6B21A8]')}>{h.type.charAt(0) + h.type.slice(1).toLowerCase()}</span></td>
+                <td className={td}><span className={cx('rounded-full px-2 py-0.5 text-xs font-semibold', h.type === 'OPTIONAL' ? 'bg-[#F4F7FD] text-muted' : h.type === 'NATIONAL' ? 'bg-[#1D4ED8] text-white' : 'bg-[#DBEAFE] text-[#1E3A8A]')}>{h.type.charAt(0) + h.type.slice(1).toLowerCase()}</span></td>
                 <td className={td}>{h.location_name}</td>
                 <td className={td}><ActionForm action={deleteHolidayAction} submit="Remove" variant="ghost" className="flex" confirmText={`Remove ${h.name} for ${h.location_name}?`}><input type="hidden" name="id" value={h.id} /></ActionForm></td>
               </tr>
@@ -183,7 +183,7 @@ async function Logs({ actor }: { actor: Awaited<ReturnType<typeof getActor>> }) 
           <Table head={['When', 'To', 'Subject', 'Status']}>
             {emails.map((e) => (
               <tr key={e.id}><td className={`${td} whitespace-nowrap`}>{formatDateTimeIST(e.created_at)}</td><td className={td}>{e.to_email}</td><td className={td}>{e.subject}</td>
-                <td className={td}><span className={cx('rounded-full px-2 py-0.5 text-xs font-semibold', e.status === 'SENT' ? 'bg-[#DCFCE7] text-[#166534]' : e.status === 'FAILED' ? 'bg-[#FEE2E2] text-[#991B1B]' : 'bg-[#F1F5F9] text-[#475569]')}>{e.status === 'SKIPPED' ? 'Logged only' : e.status === 'SENT' ? 'Sent' : 'Failed'}</span>{e.error && e.status === 'FAILED' && <span className="block text-xs text-muted">{e.error.slice(0, 80)}</span>}</td></tr>
+                <td className={td}><RequestBadge status={e.status} />{e.error && e.status === 'FAILED' && <span className="block text-xs text-muted">{e.error.slice(0, 80)}</span>}</td></tr>
             ))}
           </Table>
         )}

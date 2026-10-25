@@ -76,7 +76,7 @@ export function AssistantChat({ isManager, isHr }: { isManager: boolean; isHr: b
         )}
         <div className="flex flex-col gap-3">
           {msgs.map((m, i) => (
-            <div key={i} className={cx('max-w-[90%] rounded-2xl px-3 py-2 text-sm md:max-w-[75%]', m.role === 'user' ? 'self-end bg-brand text-white' : m.error ? 'self-start border border-red-200 bg-red-50 text-red-900' : 'self-start bg-slate-100')}>
+            <div key={i} className={cx('max-w-[90%] rounded-2xl px-3 py-2 text-sm md:max-w-[75%]', m.role === 'user' ? 'self-end bg-brand text-white' : m.error ? 'self-start border border-red-200 bg-red-50 text-red-900' : 'self-start bg-brand-50')}>
               <p className="whitespace-pre-wrap">{m.content}</p>
               {m.drafts?.map((d) => <DraftCard key={d.id} d={d} />)}
               {m.role === 'assistant' && !m.error && (
@@ -89,7 +89,7 @@ export function AssistantChat({ isManager, isHr }: { isManager: boolean; isHr: b
               )}
             </div>
           ))}
-          {busy && <div className="self-start rounded-2xl bg-slate-100 px-3 py-2 text-sm text-muted">Checking…</div>}
+          {busy && <div className="self-start rounded-2xl bg-brand-50 px-3 py-2 text-sm text-muted">Checking…</div>}
           <div ref={endRef} />
         </div>
       </div>

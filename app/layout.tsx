@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   title: { default: 'Lehar HR', template: '%s · Lehar HR' },
   description: 'HRMS for Konkan Coastal Foods: employee records, attendance and leave',
 };
-export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#0F766E' };
+export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#1D4ED8' };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const body = (

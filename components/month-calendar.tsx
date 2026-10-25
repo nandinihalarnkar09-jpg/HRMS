@@ -19,13 +19,13 @@ export function MonthCalendar({ days, hrefFor, selected }: { days: DayView[]; hr
             <>
               <span className="tabular text-xs font-semibold">{dayOf(d.date)}</span>
               {m.code && <span className="tabular text-[11px] font-bold sm:text-xs">{m.code}</span>}
-              {d.isLate && <span className="rounded bg-[#FFEDD5] px-1 text-[9px] font-bold text-[#9A3412]">LATE</span>}
-              {d.missedPunch && <span className="text-[9px] font-bold text-[#991B1B]">missed</span>}
+              {d.isLate && <span className="rounded bg-[#172554] px-1 text-[9px] font-bold text-white">LATE</span>}
+              {d.missedPunch && <span className="text-[9px] font-bold underline">missed</span>}
               {d.checkIn && <span className="tabular hidden text-[10px] opacity-80 sm:block">{formatTimeIST(d.checkIn)}–{formatTimeIST(d.checkOut)}</span>}
             </>
           );
           const cls = cx('flex min-h-14 flex-col items-center justify-start gap-0.5 rounded-md p-1 sm:min-h-20', m.cls,
-            selected === d.date && 'ring-2 ring-brand', d.status === 'UPCOMING' && 'border border-line');
+            selected === d.date && 'ring-2 ring-offset-1 ring-brand', d.status === 'UPCOMING' && 'border border-line');
           const title = `${d.date}: ${m.label}${d.detail ? ` (${d.detail})` : ''}${d.holidayName ? ` – ${d.holidayName}` : ''}`;
           return hrefFor && d.status !== 'NOT_EMPLOYED'
             ? <Link key={d.date} href={hrefFor(d.date)} className={cls} title={title} aria-label={title}>{body}</Link>

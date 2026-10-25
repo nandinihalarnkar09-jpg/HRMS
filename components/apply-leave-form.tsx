@@ -81,13 +81,13 @@ export function ApplyLeaveForm({ types, initial, minDate }: {
       <fieldset className="flex gap-4 text-sm" disabled={!halfAllowed}>
         <legend className="mb-1 text-sm font-medium">Duration</legend>
         <label className="flex min-h-11 items-center gap-2"><input type="radio" name="dur" checked={!halfDay} onChange={() => setHalfDay(false)} className="size-4" /> Full day</label>
-        <label className={cx('flex min-h-11 items-center gap-2', !halfAllowed && 'text-slate-400')}><input type="radio" name="dur" checked={halfDay} onChange={() => setHalfDay(true)} className="size-4" /> Half day</label>
+        <label className={cx('flex min-h-11 items-center gap-2', !halfAllowed && 'text-[#93A8D0]')}><input type="radio" name="dur" checked={halfDay} onChange={() => setHalfDay(true)} className="size-4" /> Half day</label>
         {!t?.halfDayAllowed && <span className="self-center text-xs text-muted">({type} has no half days)</span>}
       </fieldset>
       <Textarea label="Reason" name="reason" required value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. Family function in Ponda" />
 
       {/* live preview */}
-      <div aria-live="polite" className="rounded-[var(--radius-control)] border border-line bg-slate-50 p-3 text-sm">
+      <div aria-live="polite" className="rounded-[var(--radius-control)] border border-line bg-brand-50 p-3 text-sm">
         {!from || !to ? <p className="text-muted">Pick dates to see how many working days this is.</p>
           : !preview ? <p className="text-muted">{previewErr ?? 'Calculating…'}</p> : (
             <div className="flex flex-col gap-1">

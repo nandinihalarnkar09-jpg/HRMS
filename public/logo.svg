@@ -1,6 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Lehar HR logo">
-  <rect width="64" height="64" rx="14" fill="#0F766E"/>
-  <circle cx="44" cy="20" r="7" fill="#EA580C"/>
-  <path d="M10 36c5-5 10-5 15 0s10 5 15 0 10-5 15 0" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
-  <path d="M10 47c5-5 10-5 15 0s10 5 15 0 10-5 15 0" fill="none" stroke="#CCFBF1" stroke-width="4" stroke-linecap="round"/>
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2563EB"/><stop offset="1" stop-color="#1E3A8A"/></linearGradient></defs>
+  <rect width="64" height="64" rx="14" fill="url(#g)"/>
+  <circle cx="45" cy="19" r="6" fill="#BFDBFE"/>
+  <path d="M10 35c5-5 10-5 15 0s10 5 15 0 10-5 15 0" fill="none" stroke="#fff" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M10 46c5-5 10-5 15 0s10 5 15 0 10-5 15 0" fill="none" stroke="#93C5FD" stroke-width="4.5" stroke-linecap="round"/>
 </svg>

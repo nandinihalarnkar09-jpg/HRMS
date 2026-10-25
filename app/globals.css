@@ -1,24 +1,27 @@
 @import "tailwindcss";
 
-/* Design tokens: DESIGN.md §2 */
+/* Design tokens: DESIGN.md §2. Blue and white only (red is kept solely for error messages). */
 @theme {
-  --color-brand: #0F766E;
-  --color-brand-strong: #115E59;
-  --color-brand-soft: #CCFBF1;
-  --color-accent: #EA580C;
-  --color-ink: #0F172A;
-  --color-muted: #475569;
-  --color-line: #E2E8F0;
-  --color-surface: #F8FAFC;
+  --color-brand: #1D4ED8;        /* blue-700: primary actions, links */
+  --color-brand-strong: #1E40AF; /* hover */
+  --color-brand-soft: #DBEAFE;   /* selected, chips */
+  --color-brand-50: #EFF6FF;     /* tinted panels */
+  --color-navy: #0B1F4D;         /* sidebar, hero */
+  --color-navy-2: #1E3A8A;
+  --color-ink: #0F1E3D;          /* body text (17:1 on white) */
+  --color-muted: #4A5B7A;        /* secondary text (6.9:1 on white) */
+  --color-line: #DCE6F5;         /* borders */
+  --color-surface: #F4F7FD;      /* page background */
   --color-card: #FFFFFF;
-  --color-danger: #B91C1C;
-  --color-success: #15803D;
-  --font-sans: "Segoe UI", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --color-danger: #B91C1C;       /* errors only */
+  --color-success: #1D4ED8;
+  --font-sans: "Segoe UI", ui-sans-serif, system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
   --radius-control: 8px;
-  --radius-card: 12px;
+  --radius-card: 14px;
 }
 
 html { color-scheme: light; }
 body { background: var(--color-surface); color: var(--color-ink); }
 .tabular { font-variant-numeric: tabular-nums; }
 :focus-visible { outline: 2px solid var(--color-brand); outline-offset: 2px; }
+::selection { background: #BFDBFE; }

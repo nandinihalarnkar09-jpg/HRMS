@@ -29,7 +29,7 @@ export default async function Approvals() {
                     <p className="tabular">Balance: {fmtDays(r.available)} {r.code} available → {fmtDays(Math.round((r.available - r.paid_days) * 100) / 100)} after approval</p>
                   )}
                   {r.clashes.length > 0 && (
-                    <p className="font-medium text-[#9A3412]">⚠ Clash: {r.clashes.map((c) => `${c.name} (${formatDateShort(c.from)}${c.to !== c.from ? `–${formatDateShort(c.to)}` : ''}, ${c.status.toLowerCase()})`).join('; ')}</p>
+                    <p className="rounded-md bg-brand-50 px-2 py-1 font-medium text-navy-2">⚠ Clash: {r.clashes.map((c) => `${c.name} (${formatDateShort(c.from)}${c.to !== c.from ? `–${formatDateShort(c.to)}` : ''}, ${c.status.toLowerCase()})`).join('; ')}</p>
                   )}
                 </div>
                 <DecisionForm id={r.id} kind="leave" />

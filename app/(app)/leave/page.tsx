@@ -24,7 +24,7 @@ export default async function MyLeave({ searchParams }: { searchParams: Promise<
                 <p className="tabular text-3xl font-semibold">{fmtDays(b.available)} <span className="text-sm font-normal text-muted">available</span></p>
                 <dl className="tabular mt-3 grid grid-cols-5 gap-1 text-center text-xs">
                   {[['Opening', b.opening], ['Accrued', b.accrued], ['Adjust', b.adjustment], ['Used', b.used], ['Pending', b.pending]].map(([k, v]) => (
-                    <div key={k as string} className="rounded bg-slate-50 py-1"><dt className="text-muted">{k}</dt><dd className="font-semibold">{fmtDays(v as number)}</dd></div>
+                    <div key={k as string} className="rounded bg-brand-50 py-1"><dt className="text-muted">{k}</dt><dd className="font-semibold">{fmtDays(v as number)}</dd></div>
                   ))}
                 </dl>
                 <p className="mt-2 text-xs text-muted">Available = opening + accrued + adjustment − used. You can still apply for {fmtDays(b.canApply)}.</p>

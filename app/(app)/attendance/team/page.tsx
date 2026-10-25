@@ -61,7 +61,7 @@ export default async function TeamAttendance({ searchParams }: { searchParams: P
                     <th scope="row" className="sticky left-0 z-10 whitespace-nowrap bg-card px-2 py-1 text-left font-medium">{m.employee.full_name}</th>
                     {m.days.map((d) => {
                       const meta = STATUS_META[d.status];
-                      return <td key={d.date} className="p-0.5"><span title={`${d.date} ${meta.label}`} className={cx('flex h-7 w-8 items-center justify-center rounded text-[10px] font-bold', meta.cls, d.isLate && 'ring-1 ring-[#9A3412]')}>{meta.code}</span></td>;
+                      return <td key={d.date} className="p-0.5"><span title={`${d.date} ${meta.label}`} className={cx('flex h-7 w-8 items-center justify-center rounded text-[10px] font-bold', meta.cls, d.isLate && 'ring-2 ring-[#172554]')}>{meta.code}</span></td>;
                     })}
                     <td className="tabular px-2 text-center">{fmtDays(s.daysPresent)}</td>
                     <td className="tabular px-2 text-center">{fmtDays(s.lopDays)}</td>

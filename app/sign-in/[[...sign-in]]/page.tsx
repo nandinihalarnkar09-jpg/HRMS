@@ -1,19 +1,28 @@
 import { SignIn } from '@clerk/nextjs';
-import { redirect } from 'next/navigation';
-import { Logo } from '@/components/brand';
+import '@/lib/db/client';
+import { AuthShell } from '@/components/auth-shell';
+import { LocalSignInForm } from '@/components/local-sign-in';
 import { isDevAuth } from '@/lib/auth/dev';
+import { listDemoAccounts } from '@/lib/services/local-auth';
 
 export const metadata = { title: 'Sign in' };
 
-export default function SignInPage() {
-  if (isDevAuth()) redirect('/dev-login');
+export default async function SignInPage() {
+  if (isDevAuth()) {
+    const demo = await listDemoAccounts();
+    return (
+      <AuthShell title="Welcome back" subtitle="Sign in with your Konkan Coastal Foods work email.">
+        <LocalSignInForm demo={demo} />
+      </AuthShell>
+    );
+  }
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 px-4 py-10">
-      <Logo size={44} />
-      <SignIn />
-      <p className="max-w-sm text-center text-xs text-muted">
-        Test accounts use <code>firstname.lastname+clerk_test@example.com</code> with verification code <code>424242</code> (see README).
-      </p>
-    </main>
+    <AuthShell title="Welcome back" subtitle="Sign in with your Konkan Coastal Foods work email.">
+      <SignIn appearance={{
+        variables: { colorPrimary: '#1D4ED8', colorText: '#0F1E3D', borderRadius: '8px', fontFamily: 'Segoe UI, system-ui, sans-serif' },
+        elements: { card: 'shadow-none border border-[#DCE6F5]', rootBox: 'w-full', cardBox: 'w-full shadow-none' },
+      }} />
+      <p className="mt-4 text-xs text-muted">Test accounts: <code>firstname.lastname+clerk_test@example.com</code>, verification code <code>424242</code>.</p>
+    </AuthShell>
   );
 }

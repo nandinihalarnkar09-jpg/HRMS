@@ -26,7 +26,7 @@ export default async function LeaveCalendar({ searchParams }: { searchParams: Pr
                 <tr>
                   <th className="sticky left-0 z-10 bg-card px-2 py-1 text-left">Employee</th>
                   {cal.days.map((d) => (
-                    <th key={d} className={cx('px-0.5 py-1 font-medium', clash.has(d) ? 'bg-[#FEE2E2] text-[#991B1B]' : 'text-muted')} title={clash.has(d) ? 'Two or more people away' : undefined}>
+                    <th key={d} className={cx('px-0.5 py-1 font-medium', clash.has(d) ? 'bg-[#172554] text-white rounded' : 'text-muted')} title={clash.has(d) ? 'Two or more people away' : undefined}>
                       <span className="block">{weekdayName(d)[0]}</span>{dayOf(d)}
                     </th>
                   ))}
@@ -41,7 +41,7 @@ export default async function LeaveCalendar({ searchParams }: { searchParams: Pr
                       return (
                         <td key={d} className="p-0.5">
                           <span className={cx('flex h-7 w-8 items-center justify-center rounded text-[10px] font-bold',
-                            !c ? 'bg-white' : c.status === 'APPROVED' ? 'bg-[#DBEAFE] text-[#1E40AF]' : 'border border-dashed border-[#92400E] bg-[#FEF3C7] text-[#92400E]')}
+                            !c ? 'bg-white' : c.status === 'APPROVED' ? 'bg-[#2563EB] text-white' : 'border border-dashed border-[#60A5FA] bg-white text-[#1D4ED8]')}
                             title={c ? `${c.code} ${c.status.toLowerCase()}${c.half ? ' (half day)' : ''}` : undefined}>
                             {c ? `${c.code}${c.half ? '½' : ''}` : ''}
                           </span>
@@ -55,9 +55,9 @@ export default async function LeaveCalendar({ searchParams }: { searchParams: Pr
           </div>
         )}
         <p className="mt-3 flex flex-wrap gap-3 text-xs text-muted">
-          <span><span className="mr-1 inline-block h-3 w-4 rounded bg-[#DBEAFE]" />Approved</span>
-          <span><span className="mr-1 inline-block h-3 w-4 rounded border border-dashed border-[#92400E] bg-[#FEF3C7]" />Pending</span>
-          <span><span className="mr-1 inline-block h-3 w-4 rounded bg-[#FEE2E2]" />Clash: 2+ people away</span>
+          <span><span className="mr-1 inline-block h-3 w-4 rounded bg-[#2563EB]" />Approved</span>
+          <span><span className="mr-1 inline-block h-3 w-4 rounded border border-dashed border-[#60A5FA] bg-white" />Pending</span>
+          <span><span className="mr-1 inline-block h-3 w-4 rounded bg-[#172554]" />Clash: 2+ people away</span>
         </p>
       </Card>
     </div>

@@ -28,9 +28,11 @@ export default async function Home() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-end justify-between gap-2">
-        <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">{greet}, {actor.fullName.split(' ')[0]}</h1>
-        <p className="text-sm text-muted">{day.ok ? formatDate(day.v.today) : ''} · IST</p>
+      <div className="relative overflow-hidden rounded-[var(--radius-card)] bg-gradient-to-r from-brand to-navy-2 px-5 py-6 text-white md:px-7">
+        <div aria-hidden className="absolute -right-10 -top-16 size-56 rounded-full bg-white/10" />
+        <p className="relative text-sm text-[#BFDBFE]">{day.ok ? formatDate(day.v.today) : ''} · IST</p>
+        <h1 className="relative mt-1 text-2xl font-semibold tracking-tight md:text-3xl">{greet}, {actor.fullName.split(' ')[0]}</h1>
+        <p className="relative mt-1 text-sm text-[#DBEAFE]">{day.ok ? `${day.v.employee.designation} · ${day.v.employee.location_name}` : ''}</p>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
@@ -101,10 +103,10 @@ export default async function Home() {
               return (
                 <div className="flex flex-col gap-3">
                   <div className="tabular flex flex-wrap gap-2 text-sm">
-                    <span className="rounded-full bg-[#DCFCE7] px-3 py-1 text-[#166534]">Present {c(['PRESENT', 'WFH', 'HALF_DAY']) + t.filter((x) => x.status === 'IN_PROGRESS' && x.checkIn).length}</span>
-                    <span className="rounded-full bg-[#DBEAFE] px-3 py-1 text-[#1E40AF]">On leave {c(['ON_LEAVE'])}</span>
-                    <span className="rounded-full bg-[#FEE2E2] px-3 py-1 text-[#991B1B]">Absent {c(['ABSENT'])}</span>
-                    <span className="rounded-full bg-[#F1F5F9] px-3 py-1 text-[#475569]">Not yet in {notIn}</span>
+                    <span className="rounded-full bg-[#DBEAFE] px-3 py-1 text-[#1E3A8A]">Present {c(['PRESENT', 'WFH', 'HALF_DAY']) + t.filter((x) => x.status === 'IN_PROGRESS' && x.checkIn).length}</span>
+                    <span className="rounded-full bg-[#2563EB] px-3 py-1 text-white">On leave {c(['ON_LEAVE'])}</span>
+                    <span className="rounded-full bg-[#1E3A8A] px-3 py-1 text-white">Absent {c(['ABSENT'])}</span>
+                    <span className="rounded-full border border-[#93C5FD] bg-white px-3 py-1 text-[#1D4ED8]">Not yet in {notIn}</span>
                   </div>
                   {away.length === 0 ? <EmptyState icon="✓">Your team is all in.</EmptyState> : (
                     <ul className="divide-y divide-line text-sm">

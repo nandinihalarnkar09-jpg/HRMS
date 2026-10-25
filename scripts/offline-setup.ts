@@ -10,6 +10,7 @@ import { resolveActor } from '../lib/services/identity';
 import { getBalances, previewLeave } from '../lib/services/leave';
 import { getTeamToday } from '../lib/services/attendance';
 import { addDays, todayIST, weekdayOf } from '../lib/core/dates';
+import { ensureLocalLogins } from '../lib/services/local-auth';
 
 async function main() {
   const dir = process.env.PGLITE_DIR || './.pglite';
@@ -22,6 +23,8 @@ async function main() {
     console.log('\nTest users (pick one on the login page):');
     console.table(logins);
   } else console.log(`✓ database already has ${n} employees`);
+  const created = await ensureLocalLogins(db);
+  console.log(`✓ sign-in passwords ready (${created} new). Password for everyone: <firstname>@KCF2026, e.g. priya@KCF2026`);
 
   // Self-check through the same services the screens use
   const who = async (first: string) => {
