@@ -33,7 +33,7 @@ Next.js 16 uses `proxy.ts` (not middleware.ts), and `params`/`searchParams` are 
 - Keep the store-only-opening design: available leave balance is CALCULATED, never stored.
 
 ## Commands
-- `npm run dev`: local dev (set `AUTH_MODE=dev` for the pick-a-user login; never in production)
+- `npm run dev`: local dev (set `AUTH_MODE=dev` for the offline email + password sign-in; never in production)
 - `npm test`: unit tests (run under two foreign time zones)
 - `npm run test:integration`: services against `TEST_DATABASE_URL`
 - `npm run db:setup`: apply migrations + seed to `DATABASE_URL`

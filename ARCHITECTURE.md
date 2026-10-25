@@ -300,7 +300,7 @@ tests/
 
 - `.env.local` (git-ignored) holds `DATABASE_URL`, `CLERK_SECRET_KEY`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `RESEND_API_KEY`, `GOOGLE_GENERATIVE_AI_API_KEY`, `GROQ_API_KEY`.
 - `.env.example` is committed with blank values.
-- `AUTH_MODE=dev` (a pick-a-user login for local testing) is **refused when `NODE_ENV=production`** and when `VERCEL` is set, so it cannot be turned on in the live app.
+- `AUTH_MODE=dev` (the offline email + password sign-in, D-17) is **refused when `NODE_ENV=production`** and when `VERCEL` is set, so it cannot be turned on in the live app.
 
 ---
 
