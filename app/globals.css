@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+/* Design tokens: DESIGN.md §2 */
+@theme {
+  --color-brand: #0F766E;
+  --color-brand-strong: #115E59;
+  --color-brand-soft: #CCFBF1;
+  --color-accent: #EA580C;
+  --color-ink: #0F172A;
+  --color-muted: #475569;
+  --color-line: #E2E8F0;
+  --color-surface: #F8FAFC;
+  --color-card: #FFFFFF;
+  --color-danger: #B91C1C;
+  --color-success: #15803D;
+  --font-sans: "Segoe UI", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --radius-control: 8px;
+  --radius-card: 12px;
+}
+
+html { color-scheme: light; }
+body { background: var(--color-surface); color: var(--color-ink); }
+.tabular { font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 2px solid var(--color-brand); outline-offset: 2px; }
