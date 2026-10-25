@@ -4,7 +4,7 @@ import { getActor } from '@/lib/auth/actor';
 import * as s from '@/lib/services/settings';
 import { formatDate, formatDateTimeIST, todayIST, yearOf } from '@/lib/core/dates';
 import { ActionForm } from '@/components/settings-forms';
-import { Card, EmptyState, PageHeader, RequestBadge, Table, cx, inputClass, td } from '@/components/ui';
+import { Card, EmptyState, PageHeader, Table, cx, inputClass, td } from '@/components/ui';
 import {
   addDepartmentAction, addHolidayAction, addLocationAction, carryForwardAction, deleteHolidayAction,
   updateLeaveTypeAction, updatePolicyAction, weeklyOffsAction,
@@ -183,7 +183,7 @@ async function Logs({ actor }: { actor: Awaited<ReturnType<typeof getActor>> }) 
           <Table head={['When', 'To', 'Subject', 'Status']}>
             {emails.map((e) => (
               <tr key={e.id}><td className={`${td} whitespace-nowrap`}>{formatDateTimeIST(e.created_at)}</td><td className={td}>{e.to_email}</td><td className={td}>{e.subject}</td>
-                <td className={td}><RequestBadge status={e.status === 'SENT' ? 'APPROVED' : e.status === 'FAILED' ? 'REJECTED' : 'CANCELLED'} /> <span className="text-xs text-muted">{e.status}{e.error ? `: ${e.error.slice(0, 60)}` : ''}</span></td></tr>
+                <td className={td}><span className={cx('rounded-full px-2 py-0.5 text-xs font-semibold', e.status === 'SENT' ? 'bg-[#DCFCE7] text-[#166534]' : e.status === 'FAILED' ? 'bg-[#FEE2E2] text-[#991B1B]' : 'bg-[#F1F5F9] text-[#475569]')}>{e.status === 'SKIPPED' ? 'Logged only' : e.status === 'SENT' ? 'Sent' : 'Failed'}</span>{e.error && e.status === 'FAILED' && <span className="block text-xs text-muted">{e.error.slice(0, 80)}</span>}</td></tr>
             ))}
           </Table>
         )}
