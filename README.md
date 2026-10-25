@@ -7,7 +7,7 @@ works by calling the app's own server tools.
 | | |
 |---|---|
 | **Live URL** | _add after deploying to Vercel: https://…vercel.app_ |
-| **Repo** | _add your GitHub link_ |
+| **Repo** | https://github.com/nandinihalarnkar09-jpg/HRMS |
 | **Stack** | Next.js 16 · Supabase Postgres · Clerk · Resend · Vercel AI SDK + Gemini (Groq fallback) · Tailwind v4 |
 | **Docs** | [RESEARCH.md](RESEARCH.md) (research + policy rules D/T/L), [docs/RULES.md](docs/RULES.md) (code rule IDs, mapping, differences), [ARCHITECTURE.md](ARCHITECTURE.md), [DESIGN.md](DESIGN.md), [CLAUDE.md](CLAUDE.md), [docs/GUIDE.md](docs/GUIDE.md) |
 
@@ -48,23 +48,6 @@ http://localhost:3000, where you pick any of the 20 test users. Close the black 
 - Emails are written to Settings → Email & agent log instead of being sent. The Ask HR assistant needs internet and an AI key.
 - To start again with fresh data, delete the `.pglite` folder.
 - Command-line equivalent: `npm run offline:setup` once, then `npm run offline`.
-
-## First time on this computer (copied folder)
-
-This folder was copied without its hidden `.git` and `.claude` folders. Restore them once, in a terminal opened in this folder:
-
-```powershell
-git init -b main
-git fetch .\lehar-hr-history.bundle main
-git update-ref refs/heads/main FETCH_HEAD
-git reset            # keeps your files; the history now shows the checkpoint commits
-mkdir .claude\agents
-move claude-agents\*.md .claude\agents\
-rmdir claude-agents
-del lehar-hr-history.bundle
-```
-Then create an **empty GitHub repo** (no README) and run `git remote add origin <url>` and `git push -u origin main`.
-To check everything compiles, double-click **`verify.cmd`** (it installs, tests, typechecks and builds, writing `verify-log.txt`).
 
 ## Setup
 
@@ -162,3 +145,6 @@ tests/        unit, integration (real Postgres), agent prompt suite
 - RLS is enabled on every table; statutory and bank reads run as the `authenticated` role with the user's email claim. The full Aadhaar column is not even granted to that role.
 - No secrets in git: `.env.local` is ignored; `.env.example` has blank values.
 - The AI model never receives PAN, Aadhaar, UAN or bank data: no tool returns them, and user messages are redacted before sending.
+
+## Checking a build on Windows
+Double-click **`verify.cmd`**: it installs packages, runs the unit tests, typechecks and builds, and writes everything to `verify-log.txt`.
