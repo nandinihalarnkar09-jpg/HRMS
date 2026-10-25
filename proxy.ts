@@ -4,12 +4,12 @@
  * in getActor() and the services; this only checks that a session exists.
  */
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
-import { NextResponse, type NextFetchEvent, type NextRequest } from 'next/server';
+import { NextResponse, type NextFetchEvent, type NextMiddleware, type NextRequest } from 'next/server';
 import { DEV_COOKIE, isDevAuth } from '@/lib/auth/dev';
 
 const isPublic = createRouteMatcher(['/sign-in(.*)', '/access-denied', '/dev-login']);
 
-let clerk: ReturnType<typeof clerkMiddleware> | null = null;
+let clerk: NextMiddleware | null = null;
 
 export default function proxy(req: NextRequest, event: NextFetchEvent) {
   if (isDevAuth()) {
@@ -19,9 +19,11 @@ export default function proxy(req: NextRequest, event: NextFetchEvent) {
     }
     return NextResponse.next();
   }
-  clerk ??= clerkMiddleware(async (auth, request) => {
-    if (!isPublic(request)) await auth.protect();
-  });
+  if (!clerk) {
+    clerk = clerkMiddleware(async (auth, request) => {
+      if (!isPublic(request)) await auth.protect();
+    }) as unknown as NextMiddleware;
+  }
   return clerk(req, event);
 }
 
