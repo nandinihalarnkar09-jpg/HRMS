@@ -9,7 +9,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "test": "node scripts/run-unit-tests.mjs",
     "test:integration": "tsx --env-file-if-exists=.env.local --test --test-concurrency=1 \"tests/integration/*.test.ts\"",
     "test:agent": "tsx --env-file-if-exists=.env.local scripts/run-agent-tests.ts",

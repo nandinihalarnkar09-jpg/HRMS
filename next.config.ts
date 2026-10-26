@@ -4,6 +4,8 @@ const nextConfig: NextConfig = {
   // postgres.js must run in Node, not be bundled for the edge
   serverExternalPackages: ['postgres', '@electric-sql/pglite'],
   poweredByHeader: false,
+  // No floating Next.js badge in the local/offline app (cleaner look for demos)
+  devIndicators: false,
   async headers() {
     return [{
       source: '/(.*)',
