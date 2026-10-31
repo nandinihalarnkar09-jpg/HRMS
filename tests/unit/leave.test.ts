@@ -120,9 +120,11 @@ test('Checklist: SL of 3 days cannot be submitted without a certificate — R-LV
   assert.equal(ev({ type: SL, balance: bal(SL), from: '2026-10-27', to: '2026-10-28' }).ok, true, '2 days needs none');
 });
 
-test('Leave more than 30 days in the past is refused — R-LV-09', () => {
-  assert.equal(ev({ from: '2026-09-24', to: '2026-09-24' }).ok, false);
-  assert.equal(ev({ from: '2026-09-25', to: '2026-09-25' }).ok, true);
+test('Back-dated leave is allowed anywhere in the current leave year — R-LV-09 (D-22)', () => {
+  assert.equal(ev({ from: '2026-09-24', to: '2026-09-24' }).ok, true, 'over 30 days back is fine now');
+  assert.equal(ev({ from: '2026-01-02', to: '2026-01-02' }).ok, true, 'early January');
+  assert.equal(ev({ from: '2025-12-30', to: '2025-12-31' }).ok, false, 'last leave year is closed');
+  assert.match(ev({ from: '2025-12-30', to: '2025-12-31' }).errors.join(' '), /this leave year/);
 });
 
 test('Half day only for CL/SL/LOP and a single date — R-LV-05', () => {

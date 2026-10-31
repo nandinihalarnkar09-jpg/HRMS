@@ -39,7 +39,7 @@ export const POLICY_DOCS = [
 - Leave days are working days only. Weekly offs and holidays inside a leave period are never counted as leave.
 - Konkan has no sandwich rule. Example: at the Panaji head office, leave on Friday and Monday counts as 2 days, because Saturday and Sunday are weekly offs.
 - A Saturday is a working day at the Verna plant but a weekly off at the Panaji head office.
-- Leave cannot be applied for more than 30 days in the past.
+- You can apply for past dates (back-dated leave) anywhere in the current leave year, from 1 January. For example, sick days can be applied for when you return. It still needs your manager's approval, and once approved the day changes from Absent to On Leave.
 
 ## Balance and approval
 - Your balance = opening (carried forward) + accrued − leave already approved. Pending requests do not reduce your balance, but you cannot apply for more than your balance minus pending requests.

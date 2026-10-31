@@ -9,10 +9,12 @@ import { Alert, Button, FieldShell, Input, Select, Textarea, cx, fmtDays, inputC
 type TypeOpt = { code: string; name: string; halfDayAllowed: boolean; certAfter: number | null };
 
 /** L3: pick type, dates, full/half day, reason. Working days and balance shown BEFORE submit. */
-export function ApplyLeaveForm({ types, initial, minDate }: {
+export function ApplyLeaveForm({ types, initial, minDate, today }: {
   types: TypeOpt[];
   initial: { type?: string; from?: string; to?: string; reason?: string; halfDay?: boolean; session?: HalfDaySession };
   minDate: string;
+  /** IST today, for the back-dated hint */
+  today: string;
 }) {
   const router = useRouter();
   const [type, setType] = useState(initial.type && types.some((t) => t.code === initial.type) ? initial.type : types[0]?.code ?? 'CL');
@@ -49,7 +51,16 @@ export function ApplyLeaveForm({ types, initial, minDate }: {
 
   const balanceErrorOnly = preview?.lopOffer && !acceptLop;
   const blocking = preview ? preview.errors.filter((e) => !(preview.lopOffer && /Loss of Pay\?$/.test(e))).filter((e) => !(reason.trim().length < 3 && /short reason/.test(e))).filter((e) => !(sessionMissing && /which half/.test(e))) : [];
+  // Say WHY the button is disabled, instead of leaving a silent grey button
+  const missing: string[] = [];
+  if (!from || !to) missing.push('pick the from and to dates');
+  if (sessionMissing) missing.push('choose the time slot (first or second half)');
+  if (reason.trim().length < 3) missing.push('write a short reason (at least 3 letters)');
+  if (preview?.needsCertificate && !file) missing.push('attach the medical certificate');
+  if (balanceErrorOnly) missing.push('tick the Loss of Pay box, or shorten the dates');
+  if (from && to && !preview && !previewErr) missing.push('wait a moment while the days are counted');
   const canSubmit = Boolean(preview) && from && to && reason.trim().length >= 3 && blocking.length === 0 && !balanceErrorOnly && (!preview?.needsCertificate || file) && !sessionMissing;
+  const isPast = Boolean(from) && from < today;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -59,10 +70,18 @@ export function ApplyLeaveForm({ types, initial, minDate }: {
     if (halfDay && session) fd.set('halfDaySession', session);
     fd.set('reason', reason); fd.set('acceptLop', String(acceptLop));
     if (file) fd.set('certificate', file);
-    const res = await fetch('/api/leave/apply', { method: 'POST', body: fd });
+    let res: Response;
+    try {
+      res = await fetch('/api/leave/apply', { method: 'POST', body: fd });
+    } catch {
+      setSubmitting(false);
+      setSubmitErr('Could not reach the server. Check your internet connection and try again.');
+      return;
+    }
     const body = await res.json().catch(() => ({}));
     setSubmitting(false);
-    if (!res.ok) { setSubmitErr(body.error ?? 'Could not submit.'); return; }
+    if (res.status === 401) { setSubmitErr('Your sign-in has expired. Please sign in again, then resubmit.'); return; }
+    if (!res.ok) { setSubmitErr(body.error ?? `Could not submit (error ${res.status}). Please try again.`); return; }
     router.push('/leave?applied=1');
     router.refresh();
   }
@@ -80,8 +99,12 @@ export function ApplyLeaveForm({ types, initial, minDate }: {
       )}
       <div className="grid grid-cols-2 gap-3">
         <Input label="From" name="from" type="date" required min={minDate} value={from} onChange={(e) => { setFrom(e.target.value); if (!to || to < e.target.value) setTo(e.target.value); }} />
-        <Input label="To" name="to" type="date" required min={from || minDate} value={to} onChange={(e) => setTo(e.target.value)} />
+        <Input label="To" name="to" type="date" required min={from || minDate} max={from ? `${from.slice(0, 4)}-12-31` : undefined} value={to} onChange={(e) => setTo(e.target.value)} />
       </div>
+      <p className="-mt-2 text-xs text-muted">
+        {isPast ? <>This is <b className="text-ink">back-dated leave</b>. Once approved, those days change from Absent to On Leave.</>
+          : <>Past dates are allowed too (back-dated leave), from {formatDate(minDate)}.</>}
+      </p>
       <fieldset className="flex gap-4 text-sm" disabled={!halfAllowed}>
         <legend className="mb-1 text-sm font-medium">Duration</legend>
         <label className="flex min-h-11 items-center gap-2"><input type="radio" name="dur" checked={!halfDay} onChange={() => setHalfDay(false)} className="size-4" /> Full day</label>
@@ -140,6 +163,9 @@ export function ApplyLeaveForm({ types, initial, minDate }: {
       {blocking.length > 0 && <Alert kind="error"><ul className="list-disc pl-4">{blocking.map((e) => <li key={e}>{e}</li>)}</ul></Alert>}
       {submitErr && <Alert kind="error">{submitErr}</Alert>}
       <Button size="lg" disabled={!canSubmit || submitting} className="w-full sm:w-auto">{submitting ? 'Submitting…' : 'Submit request'}</Button>
+      {!canSubmit && !submitting && missing.length > 0 && (
+        <p className="-mt-2 text-sm text-muted" aria-live="polite">To submit, {missing.join(', then ')}.</p>
+      )}
       <p className="text-xs text-muted">Your balance changes only when your manager approves. Weekly offs and holidays are never counted.</p>
     </form>
   );

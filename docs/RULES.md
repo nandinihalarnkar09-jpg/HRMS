@@ -42,6 +42,7 @@ build differs from a proposed answer in RESEARCH.md's open questions (so faculty
 
 | RESEARCH.md | Proposed there | Built | Why |
 |---|---|---|---|
+| L14 / RESEARCH "30 days before today" | Leave can't start more than 30 days back | Back-dating allowed to 1 Jan of the current leave year (R-LV-09) | Client request (D-22); manager approval still required |
 | L1 edge / OQ 17, 20, 22 | Split a 30 Dec–4 Jan request into two linked requests | A request may not cross 31 Dec (R-LV-18); apply twice | Still "being revised"; refusing is safe and simple until faculty rule |
 | L13 / OQ 28 | Available = opening + accrued − used − **pending** | Screen shows **Available** (excl. pending) **and** "You can still apply for" (= RESEARCH's available) | The testing checklist says the balance must not change while pending; both numbers are shown so either reading holds |
 | L6 | Flag EL above 30 for encashment in December | Carry forward caps at 30; excess not yet flagged in the CSV | Encashment is payroll (out of scope); can add a CSV column |
@@ -98,7 +99,7 @@ Each rule has an ID. The code and tests refer to these IDs (search the repo for 
 - **R-LV-06** Balance per type: `opening + accrued + adjustment − used`, where *used* = approved requests. **Pending requests do not reduce the balance**; they are shown separately, and `available − pending` is the most that can still be applied for.
 - **R-LV-07** If the days requested exceed what can still be applied for, the app offers to **convert the excess to LOP**. The paid part covers the earliest working days in the range and the rest becomes LOP, in one request.
 - **R-LV-08** SL of **more than 2 days** in one request needs a medical certificate upload (PDF, JPG or PNG, max 2 MB).
-- **R-LV-09** The from-date cannot be more than **30 days in the past** (IST).
+- **R-LV-09** Back-dated leave is allowed anywhere in the **current leave year** (from 1 January, IST); a request can't reach into a closed year. Revised from the policy's 30-day limit at the client's request (D-22): it still needs manager approval, and approved past leave turns Absent days into On Leave automatically.
 - **R-LV-10** A request may not overlap another pending or approved request of the same employee, and must fall within employment dates.
 - **R-LV-11** The **employee's reporting manager** approves (HR Admin may approve anyone's). **Nobody approves their own leave.** A comment is required for rejection.
 - **R-LV-12** Balance changes **only on approval**. Approval re-checks the balance inside a database transaction that locks the rows.

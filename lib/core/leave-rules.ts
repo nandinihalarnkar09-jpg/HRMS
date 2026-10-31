@@ -4,7 +4,7 @@
  * The SAME function serves the live preview, the submit, the approval re-check and the agent.
  */
 import { countLeaveDays, type LocationCalendar } from './calendar';
-import { addDays, formatDate, isValidISODate, yearOf, type ISODate } from './dates';
+import { formatDate, isValidISODate, yearOf, type ISODate } from './dates';
 import type { Balance, LeaveTypeRule } from './leave-balance';
 import { splitPaidLop } from './leave-split';
 
@@ -21,7 +21,14 @@ export type LeaveEvaluation = {
   lopOffer: { paidDays: number; lopDays: number } | null;
 };
 
-export const MAX_BACKDATE_DAYS = 30;
+/**
+ * R-LV-09 (revised, D-22): leave may be back-dated to any day of the CURRENT leave year
+ * (from 1 January), e.g. sick days applied for on return. It still needs manager approval,
+ * and approved past leave replaces the Absent mark automatically (day status is calculated).
+ */
+export function earliestLeaveDate(today: ISODate): ISODate {
+  return `${yearOf(today)}-01-01`;
+}
 
 /** R-LV-19: which half of the day a half-day leave covers (T5: no Late after first-half leave). */
 export const HALF_DAY_SESSIONS = ['FIRST', 'SECOND'] as const;
@@ -80,8 +87,8 @@ export function evaluateLeaveRequest(args: {
     return empty;
   }
   // R-LV-09
-  if (from < addDays(today, -MAX_BACKDATE_DAYS)) {
-    errors.push(`Leave cannot be applied more than ${MAX_BACKDATE_DAYS} days in the past (earliest allowed: ${formatDate(addDays(today, -MAX_BACKDATE_DAYS))}).`);
+  if (from < earliestLeaveDate(today)) {
+    errors.push(`Past leave can be applied only within this leave year (from ${formatDate(earliestLeaveDate(today))}).`);
   }
   // R-LV-18: one leave year per request
   if (yearOf(from) !== yearOf(to)) {
