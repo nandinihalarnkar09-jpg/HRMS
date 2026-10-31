@@ -8,6 +8,7 @@ import { createGroq } from '@ai-sdk/groq';
 import { z } from 'zod';
 import type { Actor } from '@/lib/core/authz';
 import { redactPii } from '@/lib/core/redact';
+import { slotMentioned } from '@/lib/core/leave-rules';
 import { listLocations } from '@/lib/services/settings';
 import {
   MAX_TOOL_CALLS, newContext, countWorkingDays, draftLeaveRequest, explainPolicy, getHolidays, getMyLeaveBalance,
@@ -108,6 +109,8 @@ export type AgentReply = { text: string; calls: ToolCallRecord[]; drafts: DraftC
 
 export async function runAgent(actor: Actor, history: ChatMessage[], now = new Date()): Promise<AgentReply> {
   const ctx = newContext(actor);
+  // The latest user message that names a half wins ("actually, second half")
+  ctx.userSlot = history.filter((m) => m.role === 'user').map((m) => slotMentioned(String(m.content))).filter((s) => s !== null).at(-1) ?? null;
   const loc = (await listLocations()).find((l) => l.id === actor.locationId);
   const offs = (loc?.weekly_off_days ?? []).map((d) => ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][d]).join(' & ') || 'none';
   // PII never reaches the model: redact every user message (Aadhaar, PAN, account numbers…)

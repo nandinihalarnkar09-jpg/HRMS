@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { countLeaveDays } from '../../lib/core/calendar';
 import { computeBalance, proratedYearStartCredit, monthlyAccrual, completedCalendarMonths, carryForward, type Balance } from '../../lib/core/leave-balance';
-import { evaluateLeaveRequest, canCancel, halfDayLabel } from '../../lib/core/leave-rules';
+import { evaluateLeaveRequest, canCancel, halfDayLabel, slotMentioned } from '../../lib/core/leave-rules';
 import { splitPaidLop, allocateDays } from '../../lib/core/leave-split';
 import { PANAJI, VERNA, CL, SL, EL, ML, PL, LOP } from './fixtures';
 
@@ -173,4 +173,13 @@ test('Checklist: cancelling — pending any time; approved only before it starts
   assert.equal(canCancel('APPROVED', '2026-10-26', TODAY), true);
   assert.equal(canCancel('APPROVED', '2026-10-25', TODAY), false, 'already started today');
   assert.equal(canCancel('REJECTED', '2026-11-01', TODAY), false);
+});
+
+test('Agent may only use a half the user named (English / Hinglish) — R-LV-19', () => {
+  assert.equal(slotMentioned('Next Wednesday half day CL chahiye, doctor appointment'), null, 'not said → must ask');
+  assert.equal(slotMentioned('first half please'), 'FIRST');
+  assert.equal(slotMentioned('kal subah ki half day'), 'FIRST');
+  assert.equal(slotMentioned('second half, after lunch'), 'SECOND');
+  assert.equal(slotMentioned('dopahar ke baad chutti'), 'SECOND');
+  assert.equal(slotMentioned('morning or afternoon?'), null, 'both named → ambiguous');
 });

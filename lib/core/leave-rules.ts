@@ -33,6 +33,18 @@ export const HALF_DAY_SESSION_LABEL: Record<HalfDaySession, string> = {
 export function isHalfDaySession(v: unknown): v is HalfDaySession {
   return v === 'FIRST' || v === 'SECOND';
 }
+/**
+ * Did the user say WHICH half (English / Hindi / Hinglish)? The agent may only fill a slot the user named;
+ * otherwise it must ask (R-LV-19). Returns the slot, or null when the text doesn't say.
+ */
+export function slotMentioned(text: string): HalfDaySession | null {
+  const t = ` ${text.toLowerCase()} `;
+  const first = /(first|1st|morning|forenoon|\bam\b|pehl[aei]|pahl[aei]|subah|subha|savere|before lunch|pre-?lunch)/.test(t);
+  const second = /(second|2nd|afternoon|evening|post-?lunch|after lunch|\bpm\b|dusr[aei]|doosr[aei]|dopahar|dopeher|shaam|sham\b|lunch ke baad)/.test(t);
+  if (first === second) return null; // neither, or both (ambiguous)
+  return first ? 'FIRST' : 'SECOND';
+}
+
 /** e.g. 'Half day · first half (morning)'; plain 'Half day' for older requests with no slot. */
 export function halfDayLabel(session: string | null | undefined): string {
   return isHalfDaySession(session) ? `Half day · ${HALF_DAY_SESSION_LABEL[session].toLowerCase()}` : 'Half day';

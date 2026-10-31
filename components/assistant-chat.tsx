@@ -77,7 +77,7 @@ export function AssistantChat({ isManager, isHr }: { isManager: boolean; isHr: b
         <div className="flex flex-col gap-3">
           {msgs.map((m, i) => (
             <div key={i} className={cx('max-w-[90%] rounded-2xl px-3 py-2 text-sm md:max-w-[75%]', m.role === 'user' ? 'self-end bg-brand text-white' : m.error ? 'self-start border border-red-200 bg-red-50 text-red-900' : 'self-start bg-brand-50')}>
-              <p className="whitespace-pre-wrap">{m.content}</p>
+              <p className="whitespace-pre-wrap">{m.role === 'assistant' ? renderBold(m.content) : m.content}</p>
               {m.drafts?.map((d) => <DraftCard key={d.id} d={d} />)}
               {m.role === 'assistant' && !m.error && (
                 <details className="mt-1 text-xs text-muted">
@@ -105,4 +105,10 @@ export function AssistantChat({ isManager, isHr }: { isManager: boolean; isHr: b
 
 export function NotConfigured() {
   return <Alert kind="warning">The assistant needs an AI key (GOOGLE_GENERATIVE_AI_API_KEY or GROQ_API_KEY). See README.</Alert>;
+}
+
+/** Show the model's **bold** as bold text; everything else stays plain text (no HTML is ever injected). */
+function renderBold(text: string) {
+  return text.split(/(\*\*[^*\n]+\*\*)/g).map((part, i) =>
+    /^\*\*[^*\n]+\*\*$/.test(part) ? <b key={i} className="font-semibold">{part.slice(2, -2)}</b> : part);
 }

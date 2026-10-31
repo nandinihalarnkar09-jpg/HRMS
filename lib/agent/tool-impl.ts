@@ -11,7 +11,7 @@ import { ForbiddenError, NotFoundError, ValidationError } from '@/lib/core/authz
 import { countLeaveDays } from '@/lib/core/calendar';
 import { addDays, formatDate, isValidISODate, monthOf, todayIST, weekdayName, yearOf } from '@/lib/core/dates';
 import { containsSensitiveId, redactPii } from '@/lib/core/redact';
-import { halfDayLabel } from '@/lib/core/leave-rules';
+import { halfDayLabel, type HalfDaySession } from '@/lib/core/leave-rules';
 import { getBalances, listPendingForApprover, previewLeave } from '@/lib/services/leave';
 import { getTeamToday } from '@/lib/services/attendance';
 import { listHolidays, searchPolicyText } from '@/lib/services/settings';
@@ -29,6 +29,8 @@ export type AgentContext = {
   requestId: string;
   calls: ToolCallRecord[];
   drafts: DraftCard[];
+  /** The half of the day the user last named in this chat (undefined = not checked, e.g. in tests). */
+  userSlot?: HalfDaySession | null;
 };
 
 export function newContext(actor: Actor): AgentContext {
@@ -132,6 +134,14 @@ export function explainPolicy(ctx: AgentContext, input: { question: string }) {
 export function draftLeaveRequest(ctx: AgentContext, input: { leave_type_code: string; from_date: string; to_date: string; half_day?: boolean; half_day_session?: 'FIRST' | 'SECOND'; reason: string; convert_excess_to_lop?: boolean }) {
   return runTool(ctx, 'draft_leave_request', input, async () => {
     const code = String(input.leave_type_code ?? '').toUpperCase();
+    // R-LV-19: never guess the half. If the user didn't say it, the model must ask first.
+    if (input.half_day && input.half_day_session && ctx.userSlot !== undefined && ctx.userSlot !== input.half_day_session) {
+      return {
+        draft_created: false,
+        errors: ['The user has not said which half of the day.'],
+        next_step: 'Ask the user: first half (morning) or second half (afternoon)? Do not assume. Draft only after they answer.',
+      };
+    }
     const leaveInput = { leaveTypeCode: code, from: input.from_date, to: input.to_date, halfDay: Boolean(input.half_day), halfDaySession: input.half_day ? input.half_day_session ?? null : null, reason: String(input.reason ?? '').trim() || 'Personal work', acceptLop: Boolean(input.convert_excess_to_lop) };
     // Evaluate exactly like the Apply form; a missing certificate doesn't block a DRAFT (the form will ask for it)
     const p = await previewLeave(ctx.actor, leaveInput, true);
