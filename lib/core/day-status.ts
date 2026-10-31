@@ -4,6 +4,7 @@
  */
 import { nonWorkingReason, type LocationCalendar } from './calendar';
 import { hoursBetween, istTimeOf, type ISODate } from './dates';
+import type { HalfDaySession } from './leave-rules';
 
 export type DayStatus =
   | 'PRESENT' | 'WFH' | 'HALF_DAY' | 'ABSENT' | 'ON_LEAVE' | 'HOLIDAY' | 'WEEKLY_OFF'
@@ -33,7 +34,12 @@ export type LeaveFact = {
   /** portion paid by the leave type; the rest is LOP */
   paid: number;
   lop: number;
+  /** Half-day leave only: which half is on leave (null for older requests). */
+  session?: HalfDaySession | null;
 };
+
+const halfDetail = (l: LeaveFact) =>
+  `½ day ${l.typeCode}${l.session === 'FIRST' ? ' (first half)' : l.session === 'SECOND' ? ' (second half)' : ''}`;
 
 /** Units that the month-end summary adds up. Each day's units sum to at most 1. */
 export type DayUnits = {
@@ -101,7 +107,7 @@ export function computeDayStatus(args: {
 
   // Future
   if (date > today) {
-    if (leave) return { ...base, status: 'ON_LEAVE', leaveTypeCode: leave.typeCode, detail: `½ day ${leave.typeCode}`, units: zero() };
+    if (leave) return { ...base, status: 'ON_LEAVE', leaveTypeCode: leave.typeCode, detail: halfDetail(leave), units: zero() };
     return { ...base, status: 'UPCOMING', units: zero() };
   }
 
@@ -116,7 +122,8 @@ export function computeDayStatus(args: {
     else if (!inProgress) units.lop += 0.5;
     return {
       ...base, status: 'ON_LEAVE', leaveTypeCode: leave.typeCode, hoursWorked: hours,
-      detail: `½ day ${leave.typeCode}`, isLate: Boolean(a?.isLate && workedHalf),
+      // T5: arriving after 10:15 is expected when the morning (first half) is on leave
+      detail: halfDetail(leave), isLate: Boolean(a?.isLate && workedHalf && leave.session !== 'FIRST'),
       missedPunch: Boolean(a?.checkIn && !a?.checkOut && date < today), units,
     };
   }

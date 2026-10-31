@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getActor } from '@/lib/auth/actor';
+import { halfDayLabel } from '@/lib/core/leave-rules';
 import { listPendingForApprover } from '@/lib/services/leave';
 import { listPendingRegularisations } from '@/lib/services/attendance';
 import { formatDate, formatDateShort, formatTimeIST } from '@/lib/core/dates';
@@ -22,7 +23,7 @@ export default async function Approvals() {
               <li key={r.id} className="grid gap-3 py-4 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
                 <div className="flex flex-col gap-1 text-sm">
                   <p className="text-base font-semibold">{r.full_name} <span className="text-xs font-normal text-muted">{r.employee_code}</span></p>
-                  <p><b>{r.code}</b> · {formatDate(r.from_date)}{r.to_date !== r.from_date && ` – ${formatDate(r.to_date)}`}{r.is_half_day && ' (half day)'} · <b className="tabular">{fmtDays(r.days)}</b> day(s)
+                  <p><b>{r.code}</b> · {formatDate(r.from_date)}{r.to_date !== r.from_date && ` – ${formatDate(r.to_date)}`}{r.is_half_day && ` (${halfDayLabel(r.half_day_session).toLowerCase()})`} · <b className="tabular">{fmtDays(r.days)}</b> day(s)
                     {r.lop_days > 0 && <span className="text-muted"> ({fmtDays(r.paid_days)} paid + {fmtDays(r.lop_days)} LOP)</span>}</p>
                   <p className="text-muted">“{r.reason}”{r.has_attachment && <> · <a className="text-brand underline" href={`/api/leave/attachment/${r.id}`} target="_blank" rel="noreferrer">View certificate</a></>}</p>
                   {r.available !== null && (

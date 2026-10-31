@@ -23,11 +23,28 @@ export type LeaveEvaluation = {
 
 export const MAX_BACKDATE_DAYS = 30;
 
+/** R-LV-19: which half of the day a half-day leave covers (T5: no Late after first-half leave). */
+export const HALF_DAY_SESSIONS = ['FIRST', 'SECOND'] as const;
+export type HalfDaySession = (typeof HALF_DAY_SESSIONS)[number];
+export const HALF_DAY_SESSION_LABEL: Record<HalfDaySession, string> = {
+  FIRST: 'First half (morning)',
+  SECOND: 'Second half (afternoon)',
+};
+export function isHalfDaySession(v: unknown): v is HalfDaySession {
+  return v === 'FIRST' || v === 'SECOND';
+}
+/** e.g. 'Half day · first half (morning)'; plain 'Half day' for older requests with no slot. */
+export function halfDayLabel(session: string | null | undefined): string {
+  return isHalfDaySession(session) ? `Half day · ${HALF_DAY_SESSION_LABEL[session].toLowerCase()}` : 'Half day';
+}
+
 export function evaluateLeaveRequest(args: {
   type: LeaveTypeRule;
   from: string;
   to: string;
   halfDay: boolean;
+  /** Required when halfDay is true (R-LV-19). */
+  halfDaySession?: string | null;
   reason: string;
   today: ISODate;
   employee: { doj: ISODate; lwd: ISODate | null; gender: string };
@@ -64,6 +81,10 @@ export function evaluateLeaveRequest(args: {
   // R-LV-05
   if (halfDay && !type.halfDayAllowed) errors.push(`${type.name} cannot be taken as a half day.`);
   if (halfDay && from !== to) errors.push('A half day must be a single date (from-date = to-date).');
+  // R-LV-19
+  if (halfDay && type.halfDayAllowed && from === to && !isHalfDaySession(args.halfDaySession)) {
+    errors.push('Choose which half of the day: first half (morning) or second half (afternoon).');
+  }
   // R-LV-14 / R-LV-15
   if (type.eligibleGender && employee.gender !== type.eligibleGender) {
     errors.push(`${type.name} is available only to employees recorded as ${type.eligibleGender.toLowerCase()}. Contact HR if your record is wrong.`);

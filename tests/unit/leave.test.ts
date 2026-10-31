@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { countLeaveDays } from '../../lib/core/calendar';
 import { computeBalance, proratedYearStartCredit, monthlyAccrual, completedCalendarMonths, carryForward, type Balance } from '../../lib/core/leave-balance';
-import { evaluateLeaveRequest, canCancel } from '../../lib/core/leave-rules';
+import { evaluateLeaveRequest, canCancel, halfDayLabel } from '../../lib/core/leave-rules';
 import { splitPaidLop, allocateDays } from '../../lib/core/leave-split';
 import { PANAJI, VERNA, CL, SL, EL, ML, PL, LOP } from './fixtures';
 
@@ -126,9 +126,21 @@ test('Leave more than 30 days in the past is refused — R-LV-09', () => {
 });
 
 test('Half day only for CL/SL/LOP and a single date — R-LV-05', () => {
-  assert.equal(ev({ from: '2026-10-27', to: '2026-10-27', halfDay: true }).days, 0.5);
-  assert.equal(ev({ type: EL, balance: bal(EL), from: '2026-10-27', to: '2026-10-27', halfDay: true }).ok, false);
-  assert.equal(ev({ from: '2026-10-27', to: '2026-10-28', halfDay: true }).ok, false);
+  assert.equal(ev({ from: '2026-10-27', to: '2026-10-27', halfDay: true, halfDaySession: 'FIRST' }).days, 0.5);
+  assert.equal(ev({ type: EL, balance: bal(EL), from: '2026-10-27', to: '2026-10-27', halfDay: true, halfDaySession: 'FIRST' }).ok, false);
+  assert.equal(ev({ from: '2026-10-27', to: '2026-10-28', halfDay: true, halfDaySession: 'FIRST' }).ok, false);
+});
+
+test('Half-day leave needs a time slot: first half or second half — R-LV-19', () => {
+  const none = ev({ from: '2026-10-27', to: '2026-10-27', halfDay: true });
+  assert.equal(none.ok, false);
+  assert.match(none.errors.join(' '), /which half/);
+  assert.equal(ev({ from: '2026-10-27', to: '2026-10-27', halfDay: true, halfDaySession: 'NOON' }).ok, false);
+  assert.equal(ev({ from: '2026-10-27', to: '2026-10-27', halfDay: true, halfDaySession: 'FIRST' }).ok, true);
+  assert.equal(ev({ from: '2026-10-27', to: '2026-10-27', halfDay: true, halfDaySession: 'SECOND' }).ok, true);
+  assert.equal(ev({ from: '2026-10-27', to: '2026-10-27', halfDay: false }).ok, true, 'full day needs no slot');
+  assert.equal(halfDayLabel('FIRST'), 'Half day · first half (morning)');
+  assert.equal(halfDayLabel(null), 'Half day', 'older requests without a slot');
 });
 
 test('A range with only weekly offs needs no leave', () => {

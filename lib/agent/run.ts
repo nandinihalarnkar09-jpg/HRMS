@@ -49,6 +49,7 @@ export function buildTools(ctx: AgentContext) {
         leave_type_code: z.enum(['CL', 'SL', 'EL', 'ML', 'PL', 'LOP']).describe('CL casual, SL sick, EL earned, ML maternity, PL paternity, LOP loss of pay'),
         from_date: date, to_date: date,
         half_day: z.boolean().optional().describe('Only for a single date and only CL/SL/LOP'),
+        half_day_session: z.enum(['FIRST', 'SECOND']).optional().describe('Required when half_day=true: FIRST = first half (morning), SECOND = second half (afternoon). If the user did not say which half, ASK them; never guess.'),
         reason: z.string().min(3).max(300).describe('Short reason in the user’s words'),
         convert_excess_to_lop: z.boolean().optional().describe('Only true after the user agreed to convert excess days to Loss of Pay'),
       }),

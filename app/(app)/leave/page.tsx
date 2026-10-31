@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getActor } from '@/lib/auth/actor';
+import { halfDayLabel } from '@/lib/core/leave-rules';
 import { getBalances, listMyRequests } from '@/lib/services/leave';
 import { formatDate, todayIST } from '@/lib/core/dates';
 import { CancelLeaveButton } from '@/components/request-actions';
@@ -43,7 +44,7 @@ export default async function MyLeave({ searchParams }: { searchParams: Promise<
             {reqs.map((r) => (
               <tr key={r.id}>
                 <td className={`${td} font-semibold`}>{r.code}</td>
-                <td className={td}>{formatDate(r.from_date)}{r.to_date !== r.from_date && <> –<br />{formatDate(r.to_date)}</>}{r.is_half_day && <span className="block text-xs text-muted">Half day</span>}</td>
+                <td className={td}>{formatDate(r.from_date)}{r.to_date !== r.from_date && <> –<br />{formatDate(r.to_date)}</>}{r.is_half_day && <span className="block text-xs text-muted">{halfDayLabel(r.half_day_session)}</span>}</td>
                 <td className={`${td} tabular`}>{fmtDays(r.days)}{r.lop_days > 0 && <span className="block text-xs text-muted">{fmtDays(r.paid_days)} paid + {fmtDays(r.lop_days)} LOP</span>}</td>
                 <td className={td}>{r.reason}{r.has_attachment && <a className="block text-xs text-brand underline" href={`/api/leave/attachment/${r.id}`} target="_blank" rel="noreferrer">Certificate</a>}</td>
                 <td className={td}><RequestBadge status={r.status} /></td>

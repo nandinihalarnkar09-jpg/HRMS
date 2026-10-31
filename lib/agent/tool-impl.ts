@@ -11,6 +11,7 @@ import { ForbiddenError, NotFoundError, ValidationError } from '@/lib/core/authz
 import { countLeaveDays } from '@/lib/core/calendar';
 import { addDays, formatDate, isValidISODate, monthOf, todayIST, weekdayName, yearOf } from '@/lib/core/dates';
 import { containsSensitiveId, redactPii } from '@/lib/core/redact';
+import { halfDayLabel } from '@/lib/core/leave-rules';
 import { getBalances, listPendingForApprover, previewLeave } from '@/lib/services/leave';
 import { getTeamToday } from '@/lib/services/attendance';
 import { listHolidays, searchPolicyText } from '@/lib/services/settings';
@@ -128,10 +129,10 @@ export function explainPolicy(ctx: AgentContext, input: { question: string }) {
 }
 
 // ---------------------------------------------------------------- 5. draft_leave_request (write → confirmed by a human)
-export function draftLeaveRequest(ctx: AgentContext, input: { leave_type_code: string; from_date: string; to_date: string; half_day?: boolean; reason: string; convert_excess_to_lop?: boolean }) {
+export function draftLeaveRequest(ctx: AgentContext, input: { leave_type_code: string; from_date: string; to_date: string; half_day?: boolean; half_day_session?: 'FIRST' | 'SECOND'; reason: string; convert_excess_to_lop?: boolean }) {
   return runTool(ctx, 'draft_leave_request', input, async () => {
     const code = String(input.leave_type_code ?? '').toUpperCase();
-    const leaveInput = { leaveTypeCode: code, from: input.from_date, to: input.to_date, halfDay: Boolean(input.half_day), reason: String(input.reason ?? '').trim() || 'Personal work', acceptLop: Boolean(input.convert_excess_to_lop) };
+    const leaveInput = { leaveTypeCode: code, from: input.from_date, to: input.to_date, halfDay: Boolean(input.half_day), halfDaySession: input.half_day ? input.half_day_session ?? null : null, reason: String(input.reason ?? '').trim() || 'Personal work', acceptLop: Boolean(input.convert_excess_to_lop) };
     // Evaluate exactly like the Apply form; a missing certificate doesn't block a DRAFT (the form will ask for it)
     const p = await previewLeave(ctx.actor, leaveInput, true);
     const needsCertificate = p.needsCertificate;
@@ -142,8 +143,8 @@ export function draftLeaveRequest(ctx: AgentContext, input: { leave_type_code: s
       };
     }
     const draftId = await createDraft(ctx.actor, 'LEAVE_REQUEST', { ...leaveInput, needsCertificate, days: p.days, paidDays: p.paidDays, lopDays: p.lopDays });
-    const summary = `${code} · ${formatDate(leaveInput.from)}${leaveInput.to !== leaveInput.from ? ` – ${formatDate(leaveInput.to)}` : ''}${leaveInput.halfDay ? ' (half day)' : ''} · ${p.days} working day(s)${p.lopDays ? ` = ${p.paidDays} ${code} + ${p.lopDays} LOP` : ''}`;
-    const applyUrl = `/leave/apply?type=${code}&from=${leaveInput.from}&to=${leaveInput.to}${leaveInput.halfDay ? '&half=1' : ''}&reason=${encodeURIComponent(leaveInput.reason)}`;
+    const summary = `${code} · ${formatDate(leaveInput.from)}${leaveInput.to !== leaveInput.from ? ` – ${formatDate(leaveInput.to)}` : ''}${leaveInput.halfDay ? ` (${halfDayLabel(leaveInput.halfDaySession).toLowerCase()})` : ''} · ${p.days} working day(s)${p.lopDays ? ` = ${p.paidDays} ${code} + ${p.lopDays} LOP` : ''}`;
+    const applyUrl = `/leave/apply?type=${code}&from=${leaveInput.from}&to=${leaveInput.to}${leaveInput.halfDay ? `&half=1${leaveInput.halfDaySession ? `&session=${leaveInput.halfDaySession}` : ''}` : ''}&reason=${encodeURIComponent(leaveInput.reason)}`;
     ctx.drafts.push({ id: draftId, kind: 'LEAVE_REQUEST', summary, needsCertificate, applyUrl });
     return {
       draft_created: true, draft_id: draftId, submitted: false,
@@ -186,7 +187,7 @@ export function summarisePending(ctx: AgentContext, input: { limit?: number }) {
     return {
       pending_count: rows.length,
       requests: rows.slice(0, Math.min(20, Number(input.limit) || 20)).map((r) => ({
-        employee: r.full_name, code: r.employee_code, type: r.code, from: r.from_date, to: r.to_date, half_day: r.is_half_day,
+        employee: r.full_name, code: r.employee_code, type: r.code, from: r.from_date, to: r.to_date, half_day: r.is_half_day, half_day_session: r.half_day_session,
         days: r.days, paid_days: r.paid_days, lop_days: r.lop_days, reason: r.reason,
         balance_available: r.available, balance_after_approval: r.available !== null ? Math.round((r.available - r.paid_days) * 100) / 100 : null,
         clash_warnings: r.clashes.map((c) => `${c.name} is ${c.status.toLowerCase()} on leave ${c.from}${c.to !== c.from ? ` to ${c.to}` : ''}`),

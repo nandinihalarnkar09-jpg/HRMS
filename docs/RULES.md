@@ -45,7 +45,6 @@ build differs from a proposed answer in RESEARCH.md's open questions (so faculty
 | L1 edge / OQ 17, 20, 22 | Split a 30 Dec–4 Jan request into two linked requests | A request may not cross 31 Dec (R-LV-18); apply twice | Still "being revised"; refusing is safe and simple until faculty rule |
 | L13 / OQ 28 | Available = opening + accrued − used − **pending** | Screen shows **Available** (excl. pending) **and** "You can still apply for" (= RESEARCH's available) | The testing checklist says the balance must not change while pending; both numbers are shown so either reading holds |
 | L6 | Flag EL above 30 for encashment in December | Carry forward caps at 30; excess not yet flagged in the CSV | Encashment is payroll (out of scope); can add a CSV column |
-| T5 / OQ 8 | No Late after approved first-half leave | Half-day leave has no first/second-half choice yet; Late is skipped only on WFH | Needs a "which half" field |
 | T7 / OQ 26 | WFH needs manager (and skip-level) approval | WFH is self-marked (before check-in; never on off/holiday/leave days) | Approval chain still undecided |
 | T9 / OQ 13, 24 | Optional holidays can be picked per employee | Optional holidays are shown and are working days; take CL for one | Quota still undecided |
 | L10 / OQ 18, 23 | Location by effective date | Current location is used | Needs a location-history table |
@@ -109,6 +108,7 @@ Each rule has an ID. The code and tests refer to these IDs (search the repo for 
 - **R-LV-16** LOP: unlimited, half-day allowed, no balance.
 - **R-LV-17** Email: the manager is emailed on a new request; the employee is emailed on approval or rejection.
 - **R-LV-18** One request may not cross 31 December (balances belong to a leave year); apply for each year separately.
+- **R-LV-19** A half-day leave must name its time slot: **first half (morning)** or **second half (afternoon)**. With approved first-half leave, a check-in after 10:15 is not counted as Late (T5, OQ 8). Older half-day requests without a slot show as plain "Half day". `lib/core/leave-rules.ts`, `lib/core/day-status.ts`; unit + integration tests.
 
 ### What a "sandwich rule" is (and why Konkan does not have one)
 

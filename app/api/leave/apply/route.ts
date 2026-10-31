@@ -18,7 +18,7 @@ export async function POST(req: Request) {
   }
   try {
     const r = await applyLeave(actor, {
-      leaveTypeCode: s('leaveTypeCode'), from: s('from'), to: s('to'), halfDay: s('halfDay') === 'true',
+      leaveTypeCode: s('leaveTypeCode'), from: s('from'), to: s('to'), halfDay: s('halfDay') === 'true', halfDaySession: s('halfDaySession') || null,
       reason: s('reason'), acceptLop: s('acceptLop') === 'true',
     }, attachment);
     revalidatePath('/', 'layout');

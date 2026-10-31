@@ -4,7 +4,7 @@
 import { getDb, type Queryable, pgArray, pgConstraint, pgErrorCode } from '@/lib/db';
 import { canApprove, ForbiddenError, NotFoundError, ValidationError, type Actor } from '@/lib/core/authz';
 import { computeBalance, carryForward, type Balance } from '@/lib/core/leave-balance';
-import { evaluateLeaveRequest, canCancel, type LeaveEvaluation } from '@/lib/core/leave-rules';
+import { evaluateLeaveRequest, canCancel, halfDayLabel, type LeaveEvaluation } from '@/lib/core/leave-rules';
 import { formatDate, todayIST, yearEnd, yearOf, yearStart, monthStart, monthEnd, eachDay, isValidISODate } from '@/lib/core/dates';
 import { round2 } from '@/lib/core/leave-split';
 import { getCalendar, getEmployeeCore, getLeaveTypes, requireHr, teamScope, type EmployeeCore, type LeaveTypeRow } from './common';
@@ -55,6 +55,8 @@ export type LeaveInput = {
   from: string;
   to: string;
   halfDay: boolean;
+  /** 'FIRST' | 'SECOND'; required for a half day (R-LV-19) */
+  halfDaySession?: string | null;
   reason: string;
   acceptLop?: boolean;
 };
@@ -75,7 +77,7 @@ async function evaluateFor(q: Queryable, emp: EmployeeCore, input: LeaveInput, h
     ? await getCalendar(q, emp.location_id, input.from, input.to)
     : { weeklyOffDays: [], holidays: [] };
   const ev = evaluateLeaveRequest({
-    type, from: input.from, to: input.to, halfDay: Boolean(input.halfDay), reason: input.reason ?? '', today,
+    type, from: input.from, to: input.to, halfDay: Boolean(input.halfDay), halfDaySession: input.halfDaySession ?? null, reason: input.reason ?? '', today,
     employee: { doj: emp.date_of_joining, lwd: emp.last_working_day, gender: emp.gender },
     calendar, balance, hasCertificate, acceptLop: Boolean(input.acceptLop),
   });
@@ -111,9 +113,10 @@ export async function applyLeave(actor: Actor, input: LeaveInput, attachment?: A
     let id: string;
     try {
       const rows = await q.query<{ id: string }>(
-        `insert into leave_requests (employee_id, leave_type_id, from_date, to_date, is_half_day, days, paid_days, lop_days, reason)
-         values ($1,$2,$3,$4,$5,$6,$7,$8,$9) returning id`,
-        [emp.id, type.id, input.from, input.to, Boolean(input.halfDay), preview.days, preview.paidDays, preview.lopDays, input.reason.trim()]);
+        `insert into leave_requests (employee_id, leave_type_id, from_date, to_date, is_half_day, half_day_session, days, paid_days, lop_days, reason)
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) returning id`,
+        [emp.id, type.id, input.from, input.to, Boolean(input.halfDay), input.halfDay ? input.halfDaySession : null,
+          preview.days, preview.paidDays, preview.lopDays, input.reason.trim()]);
       id = rows[0].id;
     } catch (e) {
       if (pgErrorCode(e) === '23P01' || pgConstraint(e) === 'leave_no_overlap') {
@@ -142,7 +145,7 @@ export async function applyLeave(actor: Actor, input: LeaveInput, attachment?: A
       text: [
         `Hi ${a.full_name},`, '',
         `${actor.fullName} (${actor.employeeCode}) has applied for ${p.type.name}.`,
-        `Dates: ${formatDate(input.from)} – ${formatDate(input.to)}${input.halfDay ? ' (half day)' : ''}`,
+        `Dates: ${formatDate(input.from)} – ${formatDate(input.to)}${input.halfDay ? ` (${halfDayLabel(input.halfDaySession).toLowerCase()})` : ''}`,
         `Working days: ${p.days}${p.lopDays ? ` (${p.paidDays} paid + ${p.lopDays} LOP)` : ''}`,
         `Reason: ${input.reason}`, '',
         `Review it in Lehar HR: ${appUrl('/approvals')}`,
@@ -157,7 +160,7 @@ export async function applyLeave(actor: Actor, input: LeaveInput, attachment?: A
 
 type RequestRow = {
   id: string; employee_id: string; leave_type_id: number; code: string; type_name: string; from_date: string; to_date: string;
-  is_half_day: boolean; days: number; paid_days: number; lop_days: number; status: string; reason: string;
+  is_half_day: boolean; half_day_session: string | null; days: number; paid_days: number; lop_days: number; status: string; reason: string;
 };
 
 export async function decideLeave(actor: Actor, requestId: string, decision: 'APPROVED' | 'REJECTED', comment: string): Promise<void> {
@@ -199,7 +202,7 @@ export async function decideLeave(actor: Actor, requestId: string, decision: 'AP
     subject: `Your ${done.r.code} request was ${decision === 'APPROVED' ? 'approved' : 'rejected'}`,
     text: [
       `Hi ${done.emp.full_name},`, '',
-      `Your ${done.r.type_name} request for ${formatDate(done.r.from_date)} – ${formatDate(done.r.to_date)} (${done.r.days} day(s)) was ${decision.toLowerCase()} by ${actor.fullName}.`,
+      `Your ${done.r.type_name} request for ${formatDate(done.r.from_date)} – ${formatDate(done.r.to_date)}${done.r.is_half_day ? ` (${halfDayLabel(done.r.half_day_session).toLowerCase()})` : ''} (${done.r.days} day(s)) was ${decision.toLowerCase()} by ${actor.fullName}.`,
       comment.trim() ? `Comment: ${comment.trim()}` : '', '',
       `See your balance: ${appUrl('/leave')}`,
     ].filter((l) => l !== null).join('\n'),
@@ -228,14 +231,14 @@ export async function cancelLeave(actor: Actor, requestId: string): Promise<void
 
 export type LeaveRequestView = {
   id: string; employee_id: string; employee_code: string; full_name: string; code: string; type_name: string;
-  from_date: string; to_date: string; is_half_day: boolean; days: number; paid_days: number; lop_days: number;
+  from_date: string; to_date: string; is_half_day: boolean; half_day_session: string | null; days: number; paid_days: number; lop_days: number;
   reason: string; status: string; approver_name: string | null; approver_comment: string | null;
   applied_at: Date; decided_at: Date | null; has_attachment: boolean; can_cancel?: boolean;
 };
 
 const VIEW_SQL = `
   select r.id, r.employee_id, e.employee_code, e.full_name, t.code, t.name as type_name, r.from_date, r.to_date,
-         r.is_half_day, r.days, r.paid_days, r.lop_days, r.reason, r.status, a.full_name as approver_name,
+         r.is_half_day, r.half_day_session, r.days, r.paid_days, r.lop_days, r.reason, r.status, a.full_name as approver_name,
          r.approver_comment, r.applied_at, r.decided_at,
          exists(select 1 from leave_attachments x where x.leave_request_id = r.id) as has_attachment
     from leave_requests r

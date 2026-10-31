@@ -65,6 +65,16 @@ test('Half-day leave + 4h worked = 0.5 leave + 0.5 present; without work = 0.5 L
   assert.deepEqual([notWorked.units.leave.CL, notWorked.units.present, notWorked.units.lop], [0.5, 0, 0.5]);
 });
 
+test('Late is not marked after approved first-half leave; still marked with second-half leave — T5 / R-LV-19', () => {
+  const lateIn = punch('2026-10-20', '13:45', '18:00'); // 4h15m, checked in after lunch
+  const first = day('2026-10-20', { ...lateIn, isLate: true }, { leave: { typeCode: 'CL', portion: 0.5, paid: 0.5, lop: 0, session: 'FIRST' } });
+  assert.equal(first.isLate, false);
+  assert.equal(first.detail, '½ day CL (first half)');
+  const second = day('2026-10-20', { ...punch('2026-10-20', '10:20', '14:30'), isLate: true }, { leave: { typeCode: 'CL', portion: 0.5, paid: 0.5, lop: 0, session: 'SECOND' } });
+  assert.equal(second.isLate, true);
+  assert.equal(second.detail, '½ day CL (second half)');
+});
+
 test('Checklist: the third Late in a month creates a half-day LOP — R-ATT-06', () => {
   assert.equal(latePenaltyDays(2), 0);
   assert.equal(latePenaltyDays(3), 0.5);

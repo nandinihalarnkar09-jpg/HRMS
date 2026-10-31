@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { previewLeaveAction, type PreviewResult } from '@/app/(app)/leave/actions';
 import { formatDate } from '@/lib/core/dates';
+import { HALF_DAY_SESSION_LABEL, HALF_DAY_SESSIONS, type HalfDaySession } from '@/lib/core/leave-rules';
 import { Alert, Button, FieldShell, Input, Select, Textarea, cx, fmtDays, inputClass } from './ui';
 
 type TypeOpt = { code: string; name: string; halfDayAllowed: boolean; certAfter: number | null };
@@ -10,7 +11,7 @@ type TypeOpt = { code: string; name: string; halfDayAllowed: boolean; certAfter:
 /** L3: pick type, dates, full/half day, reason. Working days and balance shown BEFORE submit. */
 export function ApplyLeaveForm({ types, initial, minDate }: {
   types: TypeOpt[];
-  initial: { type?: string; from?: string; to?: string; reason?: string; halfDay?: boolean };
+  initial: { type?: string; from?: string; to?: string; reason?: string; halfDay?: boolean; session?: HalfDaySession };
   minDate: string;
 }) {
   const router = useRouter();
@@ -18,6 +19,7 @@ export function ApplyLeaveForm({ types, initial, minDate }: {
   const [from, setFrom] = useState(initial.from ?? '');
   const [to, setTo] = useState(initial.to ?? initial.from ?? '');
   const [halfDay, setHalfDay] = useState(Boolean(initial.halfDay));
+  const [session, setSession] = useState<HalfDaySession | ''>(initial.session ?? '');
   const [reason, setReason] = useState(initial.reason ?? '');
   const [acceptLop, setAcceptLop] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -31,28 +33,30 @@ export function ApplyLeaveForm({ types, initial, minDate }: {
   const halfAllowed = Boolean(t?.halfDayAllowed) && from !== '' && from === to;
   useEffect(() => { if (!halfAllowed && halfDay) setHalfDay(false); }, [halfAllowed, halfDay]);
   useEffect(() => { setAcceptLop(false); }, [type, from, to, halfDay]);
+  const sessionMissing = halfDay && !session;
 
   // Live preview: same server evaluation as submit (debounced)
   useEffect(() => {
     if (!from || !to) { setPreview(null); return; }
     const id = ++seq.current;
     const timer = setTimeout(async () => {
-      const r = await previewLeaveAction({ leaveTypeCode: type, from, to, halfDay, reason: reason || '...', acceptLop, hasCertificate: Boolean(file) });
+      const r = await previewLeaveAction({ leaveTypeCode: type, from, to, halfDay, halfDaySession: halfDay ? session || null : null, reason: reason || '...', acceptLop, hasCertificate: Boolean(file) });
       if (id !== seq.current) return;
       if ('error' in r) { setPreviewErr(r.error); setPreview(null); } else { setPreviewErr(null); setPreview(r); }
     }, 250);
     return () => clearTimeout(timer);
-  }, [type, from, to, halfDay, acceptLop, file, reason]);
+  }, [type, from, to, halfDay, session, acceptLop, file, reason]);
 
   const balanceErrorOnly = preview?.lopOffer && !acceptLop;
-  const blocking = preview ? preview.errors.filter((e) => !(preview.lopOffer && /Loss of Pay\?$/.test(e))).filter((e) => !(reason.trim().length < 3 && /short reason/.test(e))) : [];
-  const canSubmit = Boolean(preview) && from && to && reason.trim().length >= 3 && blocking.length === 0 && !balanceErrorOnly && (!preview?.needsCertificate || file);
+  const blocking = preview ? preview.errors.filter((e) => !(preview.lopOffer && /Loss of Pay\?$/.test(e))).filter((e) => !(reason.trim().length < 3 && /short reason/.test(e))).filter((e) => !(sessionMissing && /which half/.test(e))) : [];
+  const canSubmit = Boolean(preview) && from && to && reason.trim().length >= 3 && blocking.length === 0 && !balanceErrorOnly && (!preview?.needsCertificate || file) && !sessionMissing;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true); setSubmitErr(null);
     const fd = new FormData();
     fd.set('leaveTypeCode', type); fd.set('from', from); fd.set('to', to); fd.set('halfDay', String(halfDay));
+    if (halfDay && session) fd.set('halfDaySession', session);
     fd.set('reason', reason); fd.set('acceptLop', String(acceptLop));
     if (file) fd.set('certificate', file);
     const res = await fetch('/api/leave/apply', { method: 'POST', body: fd });
@@ -84,6 +88,23 @@ export function ApplyLeaveForm({ types, initial, minDate }: {
         <label className={cx('flex min-h-11 items-center gap-2', !halfAllowed && 'text-[#93A8D0]')}><input type="radio" name="dur" checked={halfDay} onChange={() => setHalfDay(true)} className="size-4" /> Half day</label>
         {!t?.halfDayAllowed && <span className="self-center text-xs text-muted">({type} has no half days)</span>}
       </fieldset>
+      {halfDay && halfAllowed && (
+        <fieldset className="-mt-2 flex flex-col gap-2 text-sm">
+          <legend className="mb-1 text-sm font-medium">Time slot <span className="text-danger">*</span></legend>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {HALF_DAY_SESSIONS.map((s) => (
+              <label key={s} className={cx('flex min-h-11 cursor-pointer items-center gap-2 rounded-[var(--radius-control)] border bg-white px-3 py-2 transition-colors',
+                session === s ? 'border-brand ring-2 ring-brand-soft' : 'border-line hover:border-brand')}>
+                <input type="radio" name="session" value={s} checked={session === s} onChange={() => setSession(s)} className="size-4" />
+                <span>{HALF_DAY_SESSION_LABEL[s]}</span>
+              </label>
+            ))}
+          </div>
+          <p className="text-xs text-muted">{session === 'FIRST' ? 'You will start work after lunch. A late check-in that day is not marked Late.'
+            : session === 'SECOND' ? 'You will leave after the morning half. Check in as usual.'
+              : 'Choose the half of the day you will be away.'}</p>
+        </fieldset>
+      )}
       <Textarea label="Reason" name="reason" required value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. Family function in Ponda" />
 
       {/* live preview */}

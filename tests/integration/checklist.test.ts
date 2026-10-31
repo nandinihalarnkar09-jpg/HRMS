@@ -281,6 +281,17 @@ test('SL of 3 days cannot be submitted without a certificate', async () => {
   await assert.rejects(leave.getAttachment(ravi, ok.id), { name: 'NotFoundError' });
 });
 
+test('Half-day leave stores its time slot; a half day without a slot is refused — R-LV-19', async () => {
+  const d = next(4, addDays(today, 21)); // a Thursday three weeks out
+  if (yearOf(d) !== yearOf(today)) return;
+  await assert.rejects(leave.applyLeave(aditya, { leaveTypeCode: 'CL', from: d, to: d, halfDay: true, reason: 'Doctor visit' }), /which half/);
+  const { id } = await leave.applyLeave(aditya, { leaveTypeCode: 'CL', from: d, to: d, halfDay: true, halfDaySession: 'FIRST', reason: 'Doctor visit' });
+  const mine = (await leave.listMyRequests(aditya)).find((r) => r.id === id)!;
+  assert.equal(mine.half_day_session, 'FIRST');
+  assert.equal(Number(mine.days), 0.5);
+  await leave.cancelLeave(aditya, id);
+});
+
 test('Balance does not change while a request is pending, and changes on approval; manager + employee emailed', async () => {
   const from = next(3, addDays(today, 2)); // Wednesday
   if (yearOf(from) !== yearOf(today)) return;

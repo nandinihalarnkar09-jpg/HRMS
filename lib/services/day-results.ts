@@ -34,10 +34,10 @@ export async function buildDayResults(
     `select employee_id, date, check_in, check_out, is_wfh, is_late, source
        from attendance where employee_id = any($1::uuid[]) and date between $2 and $3`, [ids, from, to]);
   const leaves = await q.query<{
-    employee_id: string; code: string; from_date: string; to_date: string; is_half_day: boolean;
+    employee_id: string; code: string; from_date: string; to_date: string; is_half_day: boolean; half_day_session: 'FIRST' | 'SECOND' | null;
     paid_days: number; counts_calendar_days: boolean;
   }>(
-    `select r.employee_id, t.code, r.from_date, r.to_date, r.is_half_day, r.paid_days, t.counts_calendar_days
+    `select r.employee_id, t.code, r.from_date, r.to_date, r.is_half_day, r.half_day_session, r.paid_days, t.counts_calendar_days
        from leave_requests r join leave_types t on t.id = r.leave_type_id
       where r.employee_id = any($1::uuid[]) and r.status = 'APPROVED'
         and r.from_date <= $3 and r.to_date >= $2`, [ids, from, to]);
@@ -58,7 +58,7 @@ export async function buildDayResults(
     const cal = needWide.get(e.location_id)!;
     const { charged } = countLeaveDays({ from: l.from_date, to: l.to_date, halfDay: l.is_half_day, calendar: cal, countsCalendarDays: l.counts_calendar_days });
     for (const d of allocateDays(charged, Number(l.paid_days))) {
-      leaveBy.set(`${l.employee_id}|${d.date}`, { typeCode: l.code, portion: d.portion, paid: d.paid, lop: d.lop });
+      leaveBy.set(`${l.employee_id}|${d.date}`, { typeCode: l.code, portion: d.portion, paid: d.paid, lop: d.lop, session: l.half_day_session });
     }
   }
 

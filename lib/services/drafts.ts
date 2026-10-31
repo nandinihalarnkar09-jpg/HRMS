@@ -34,7 +34,7 @@ export async function confirmDraft(actor: Actor, id: string): Promise<{ kind: Dr
   if (d.kind === 'LEAVE_REQUEST') {
     const p = d.payload as unknown as LeaveInput & { needsCertificate?: boolean };
     if (p.needsCertificate) throw new ValidationError('This leave needs a medical certificate. Use the Apply leave form to attach it.');
-    const r = await applyLeave(actor, { leaveTypeCode: p.leaveTypeCode, from: p.from, to: p.to, halfDay: p.halfDay, reason: p.reason, acceptLop: p.acceptLop });
+    const r = await applyLeave(actor, { leaveTypeCode: p.leaveTypeCode, from: p.from, to: p.to, halfDay: p.halfDay, halfDaySession: p.halfDaySession ?? null, reason: p.reason, acceptLop: p.acceptLop });
     ref = r.id;
   } else {
     if (!actor.isHrAdmin) throw new ValidationError('Only HR can send reminder emails.');

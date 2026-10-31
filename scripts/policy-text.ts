@@ -12,7 +12,7 @@ export const POLICY_DOCS = [
 ## Casual Leave (CL)
 - Casual Leave (CL) is 8 days a year, credited on 1 January. Employees who join during the year get a pro-rated credit: 8 × months remaining ÷ 12, rounded down to the nearest half day (the joining month counts if you join on or before the 15th). Example: joining on 1 July gives 4 days CL.
 - Unused Casual Leave lapses on 31 December. It is not carried forward or encashed.
-- Casual Leave can be taken as a half day.
+- Casual Leave can be taken as a half day. For a half day, choose the first half (morning) or the second half (afternoon).
 
 ## Sick Leave (SL)
 - Sick Leave (SL) is 7 days a year, credited on 1 January and pro-rated for joiners the same way as CL. Example: joining on 1 July gives 3.5 days SL.
@@ -61,7 +61,7 @@ export const POLICY_DOCS = [
 - Working 8 hours or more is a Present day. Working 4 hours to under 8 hours is a Half Day. Under 4 hours, or no punch, is Absent.
 
 ## Late marks
-- Checking in after 10:15 AM is marked Late.
+- Checking in after 10:15 AM is marked Late. It does not count as Late on a day when the first half (morning) is on approved half-day leave.
 - Every three Late marks in a calendar month convert into half a day of Loss of Pay.
 
 ## Work from home
