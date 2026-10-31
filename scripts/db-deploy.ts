@@ -12,7 +12,9 @@ import { seed } from './seed';
 import { ensureLocalLogins } from '../lib/services/local-auth';
 
 async function main() {
-  const url = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
+  const env = process.env;
+  const url = env.DATABASE_URL_UNPOOLED || env.DATABASE_POSTGRES_URL_NON_POOLING || env.POSTGRES_URL_NON_POOLING
+    || env.DATABASE_URL || env.DATABASE_POSTGRES_URL || env.POSTGRES_URL;
   if (!url) { console.warn('db-deploy: DATABASE_URL not set, skipping database setup'); return; }
   const sql = postgres(url, {
     prepare: false, max: 1, onnotice: () => undefined,

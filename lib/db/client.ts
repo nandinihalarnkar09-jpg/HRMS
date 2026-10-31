@@ -13,7 +13,8 @@ type Sql = ReturnType<typeof postgres>;
 const g = globalThis as unknown as { __leharSql?: Sql; __leharDb?: Db };
 
 function makeSql(): Sql {
-  const url = process.env.DATABASE_URL;
+  // DATABASE_URL (Supabase/local) or the names Vercel's Neon integration creates
+  const url = process.env.DATABASE_URL || process.env.DATABASE_POSTGRES_URL || process.env.POSTGRES_URL;
   if (!url) throw new Error('DATABASE_URL is not set. Copy .env.example to .env.local and fill it in.');
   return postgres(url, {
     prepare: false,
