@@ -119,14 +119,14 @@ export async function runAgent(actor: Actor, history: ChatMessage[], now = new D
   // Try each model with a time limit; on a timeout / overload / unknown model, move to the next.
   const models = getModels();
   const started = Date.now();
-  let result: Awaited<ReturnType<typeof generateText>> | null = null;
+  let answer: string | null = null;
   let lastError: unknown = null;
-  for (let i = 0; i < models.length && !result; i++) {
+  for (let i = 0; i < models.length && answer === null; i++) {
     const remaining = TOTAL_BUDGET_MS - (Date.now() - started);
     if (remaining < 5_000) break;
     if (i > 0) { ctx.calls.length = 0; ctx.drafts.length = 0; } // a retry starts clean
     try {
-      result = await generateText({
+      const result = await generateText({
         model: models[i].model,
         system: systemPrompt(actor, { name: loc?.name ?? 'unknown', weeklyOffs: offs }, now),
         messages,
@@ -136,6 +136,7 @@ export async function runAgent(actor: Actor, history: ChatMessage[], now = new D
         maxRetries: 0,
         abortSignal: AbortSignal.timeout(i < models.length - 1 ? Math.min(FIRST_TRY_MS, remaining) : remaining),
       });
+      answer = result.text ?? '';
     } catch (e) {
       lastError = e;
       const msg = e instanceof Error ? `${e.name} ${e.message}` : String(e);
@@ -143,9 +144,9 @@ export async function runAgent(actor: Actor, history: ChatMessage[], now = new D
       console.warn(`agent: model ${models[i].id} failed (${msg.slice(0, 120)}); trying next`);
     }
   }
-  if (!result) throw lastError instanceof Error ? lastError : new Error('The assistant timed out');
+  if (answer === null) throw lastError instanceof Error ? lastError : new Error('The assistant timed out');
 
-  let text = (result.text ?? '').trim();
+  let text = answer.trim();
   if (!text) text = ctx.calls.length >= MAX_TOOL_CALLS ? 'That needed too many lookups. Please ask a narrower question.' : 'Sorry, I could not answer that.';
   text = guardUnsupportedNumbers(text, ctx.calls);
   return { text: redactPii(text), calls: ctx.calls, drafts: ctx.drafts, requestId: ctx.requestId };
