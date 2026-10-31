@@ -6,7 +6,7 @@ works by calling the app's own server tools.
 
 | | |
 |---|---|
-| **Live URL** | _add after deploying to Vercel: https://…vercel.app_ |
+| **Live URL** | https://lehar-hr.vercel.app (public demo: email + password, password `firstname@KCF2026`) |
 | **Repo** | https://github.com/nandinihalarnkar09-jpg/HRMS |
 | **Stack** | Next.js 16 · Supabase Postgres · Clerk · Resend · Vercel AI SDK + Gemini (Groq fallback) · Tailwind v4 |
 | **Docs** | [RESEARCH.md](RESEARCH.md) (research + policy rules D/T/L), [docs/RULES.md](docs/RULES.md) (code rule IDs, mapping, differences), [ARCHITECTURE.md](ARCHITECTURE.md), [DESIGN.md](DESIGN.md), [CLAUDE.md](CLAUDE.md), [docs/GUIDE.md](docs/GUIDE.md) |
@@ -15,8 +15,9 @@ works by calling the app's own server tools.
 
 ## Test logins
 
-The seed creates 20 employees. In a **Clerk development instance**, any email containing
-`+clerk_test` can sign in with the verification code **`424242`**, so no inbox is needed.
+The seed creates 20 employees (all fictional). On the **live demo** (https://lehar-hr.vercel.app) and offline,
+sign in with the email below and the password **`firstname@KCF2026`** (e.g. `priya@KCF2026`); the sign-in page
+also lists every account. In a **Clerk** deployment, any email containing `+clerk_test` signs in with the code **`424242`**.
 
 | Role | Name | Email | Location |
 |---|---|---|---|
@@ -30,7 +31,7 @@ The seed creates 20 employees. In a **Clerk development instance**, any email co
 | Employee (missed punch + pending regularisation) | Joel D'Souza | `joel.dsouza+clerk_test@example.com` | Verna Plant |
 | **Exited** (cannot log in) | Nikhil Shet | `nikhil.shet+clerk_test@example.com` | Verna Plant |
 
-Sign in → enter the email → **Email code** → `424242`. (The other 11 employees follow the same
+With Clerk: enter the email → **Email code** → `424242`. (The other 11 employees follow the same
 `first.last+clerk_test@example.com` pattern. `npm run db:setup` prints them all.)
 
 > Local shortcut: with `AUTH_MODE=dev` in `.env.local`, `npm run dev` uses the offline email + password sign-in
@@ -104,9 +105,13 @@ npm run dev          # http://localhost:3000
 ```
 
 ### 8. Deploy (Vercel)
-1. Push to GitHub → **Import** in Vercel.
-2. Add every variable from `.env.local` **except** `AUTH_MODE` and `TEST_DATABASE_URL`. Set `NEXT_PUBLIC_APP_URL` to the Vercel URL.
-3. Deploy, then add the URL to the table at the top of this file.
+The live demo is set up like this (decision D-19):
+1. Vercel → **Import** the GitHub repo (project `lehar-hr`), env var `AUTH_MODE=password`.
+2. Project → **Storage → Create Database → Neon** (free), connected with the prefix `DATABASE`.
+3. Every build runs `npm run vercel-build` = `scripts/db-deploy.ts` (new migrations; seed only if the DB is empty; demo passwords) then `next build`. Pushing to `main` redeploys.
+4. Optional: `GOOGLE_GENERATIVE_AI_API_KEY` (Ask HR), `RESEND_API_KEY` + `EMAIL_REDIRECT_TO` (real emails), `NEXT_PUBLIC_APP_URL=https://lehar-hr.vercel.app`.
+
+For a real company deployment, leave `AUTH_MODE` unset and add the Clerk keys instead.
 
 ---
 
