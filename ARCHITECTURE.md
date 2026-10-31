@@ -16,7 +16,7 @@
 | DB driver | **postgres.js** over the Supabase pooler (`prepare: false`) | Plain SQL with parameters, real transactions (`BEGIN … FOR UPDATE`) for approvals; the same SQL runs in tests against local Postgres | *supabase-js*: no multi-statement transactions from the client library; approval would need RPC functions for everything |
 | Auth | **Clerk (free dev instance)** | Hosted sign-in (email code / password), sessions, `auth()` on the server. **Roles are not stored in Clerk** (brief) | *Supabase Auth*: fine, but Clerk was the course default and its `+clerk_test` emails make test logins trivial for graders |
 | Email | **Resend (free, 3,000/month, 100/day)** via its REST API | One `fetch`, no SDK; every email is also written to `email_log` so the demo works even if delivery fails | *Nodemailer + Gmail SMTP*: app passwords, and Gmail blocks bulk sending from serverless IPs |
-| AI | **Vercel AI SDK v5** with **Google Gemini** (`gemini-flash-latest`, free tier); **Groq** `llama-3.3-70b-versatile` as a switchable fallback | The AI SDK gives provider-neutral tool calling (`tool()`, `inputSchema`, `stopWhen`). Gemini Flash has a generous free-tier tokens-per-minute budget; Groq is the backup if Gemini rate-limits on demo day | *OpenAI API*: no free tier |
+| AI | **Vercel AI SDK v5** with **Google Gemini** (`gemini-3.5-flash-lite`, then `gemini-3.5-flash`; free tier); **Groq** `llama-3.3-70b-versatile` as a switchable fallback | The AI SDK gives provider-neutral tool calling (`tool()`, `inputSchema`, `stopWhen`). Gemini Flash has a generous free-tier tokens-per-minute budget; Groq is the backup if Gemini rate-limits on demo day | *OpenAI API*: no free tier |
 | Styling | **Tailwind CSS v4** + hand-built components (`components/ui`) | Small, accessible, and matches DESIGN.md tokens exactly | *A full component kit*: more weight than 13 screens need |
 | Tests | **Node's built-in test runner via `tsx --test`** | Zero extra dependencies; runs pure rule tests and DB integration tests | *Vitest/Jest*: fine but unnecessary |
 
@@ -213,7 +213,7 @@ Database functions were considered for working days, but rejected: the same logi
 | Item | Decision |
 |---|---|
 | Library | Vercel AI SDK `generateText` with tools, `stopWhen: stepCountIs(6)` |
-| Model | `gemini-flash-latest` (free) via `@ai-sdk/google`; `AI_PROVIDER=groq` switches to `llama-3.3-70b-versatile` |
+| Model | `gemini-3.5-flash-lite` then `gemini-3.5-flash` (free) via `@ai-sdk/google`, each try time-limited (D-21); `AI_PROVIDER=groq` switches to `llama-3.3-70b-versatile` |
 | Endpoint | `POST /api/agent`: runs `getActor()` first; the model never receives DB credentials or keys |
 | Tool budget | A wrapper counts calls per question. The 6th call returns `{error: "TOOL_LIMIT"}` without running, so at most **5** tools run |
 | Logging | Every call, including refused ones, writes `agent_log(employee_id, tool, inputs, result, ok, created_at)` |
@@ -347,3 +347,4 @@ tests/
 | 2026-10-26 | D-18 | UI restyled to blue and white only (red only for errors); public start page `/welcome`; signed-out "/" redirects there | Client request for a professional look; DESIGN.md §2–3 updated |
 | 2026-10-31 | D-19 | Public demo on Vercel uses `AUTH_MODE=password` (email + password against `local_logins`, published demo passwords) instead of Clerk; the Vercel build runs `scripts/db-deploy.ts` (migrations, seed only if empty, demo passwords) | The seed data is fictional, so published passwords expose nothing real, and reviewers can sign in without a Clerk account. A real company deployment leaves `AUTH_MODE` unset and uses Clerk (unchanged). Database: Neon Postgres from the Vercel Marketplace |
 | 2026-10-31 | D-20 | Half-day leave gets a time slot: `leave_requests.half_day_session` FIRST/SECOND (migration 004), required for new half days (R-LV-19); first-half leave skips the Late mark (T5) | Client request; closes the T5/OQ 8 difference. Older rows stay NULL. Two halves of the same date for one person are still refused by the overlap constraint (apply a full day instead) |
+| 2026-10-31 | D-21 | Ask HR tries a pinned model list (`gemini-3.5-flash-lite` → `gemini-3.5-flash` → Groq if keyed), each with a time limit inside a 50 s budget | `gemini-flash-latest` moved to an overloaded model that never answered, so the request hung. Pinned ids + timeouts + fallback keep the assistant answering on the free tier |

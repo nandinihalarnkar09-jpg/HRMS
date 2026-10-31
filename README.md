@@ -96,7 +96,7 @@ address, so for the demo set `EMAIL_REDIRECT_TO=<your email>` (every email goes 
 recipient shown in the subject). Without a key, emails are only written to **Settings → Email & agent log**.
 
 ### 6. AI assistant
-Set `GOOGLE_GENERATIVE_AI_API_KEY` (free from Google AI Studio). Model: `GEMINI_MODEL=gemini-flash-latest`.
+Set `GOOGLE_GENERATIVE_AI_API_KEY` (free from Google AI Studio). By default it uses `gemini-3.5-flash-lite` and falls back to `gemini-3.5-flash` if the first model is slow or busy (each try has a time limit). Override with `GEMINI_MODEL`; avoid `-latest` aliases, which can move to an overloaded model.
 If Gemini rate-limits, set `AI_PROVIDER=groq` and `GROQ_API_KEY`.
 
 ### 7. Run

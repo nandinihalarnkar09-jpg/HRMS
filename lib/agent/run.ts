@@ -2,7 +2,7 @@
  * The agent loop: Vercel AI SDK generateText with tools. The model only chooses tools and
  * inputs; every tool runs on the server as the signed-in user (ARCHITECTURE §6).
  */
-import { generateText, stepCountIs, tool, type ModelMessage } from 'ai';
+import { generateText, stepCountIs, tool, type LanguageModel, type ModelMessage } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createGroq } from '@ai-sdk/groq';
 import { z } from 'zod';
@@ -74,15 +74,34 @@ export function buildTools(ctx: AgentContext) {
   return tools;
 }
 
-export function getModel() {
+/**
+ * Models to try, in order (D-21). A pinned fast model first, then a fallback, because "-latest"
+ * aliases can move to an overloaded model that never answers. GEMINI_MODEL / GEMINI_FALLBACK_MODEL override.
+ */
+export const DEFAULT_GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-3.5-flash'];
+
+export function getModels(): { id: string; model: LanguageModel }[] {
+  const out: { id: string; model: LanguageModel }[] = [];
   const provider = (process.env.AI_PROVIDER ?? 'google').toLowerCase();
-  if (provider === 'groq') {
-    if (!process.env.GROQ_API_KEY) throw new Error('GROQ_API_KEY is not set');
-    return createGroq({ apiKey: process.env.GROQ_API_KEY })(process.env.GROQ_MODEL || 'llama-3.3-70b-versatile');
-  }
-  if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) throw new Error('GOOGLE_GENERATIVE_AI_API_KEY is not set');
-  return createGoogleGenerativeAI({ apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY })(process.env.GEMINI_MODEL || 'gemini-flash-latest');
+  const google = process.env.GOOGLE_GENERATIVE_AI_API_KEY ? createGoogleGenerativeAI({ apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY }) : null;
+  const groq = process.env.GROQ_API_KEY ? createGroq({ apiKey: process.env.GROQ_API_KEY }) : null;
+  const geminiIds = [...new Set([process.env.GEMINI_MODEL, process.env.GEMINI_FALLBACK_MODEL, ...DEFAULT_GEMINI_MODELS].filter((x): x is string => Boolean(x)))].slice(0, 2);
+  const groqId = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+  if (provider === 'groq' && groq) out.push({ id: `groq:${groqId}`, model: groq(groqId) });
+  if (google) for (const id of geminiIds) out.push({ id, model: google(id) });
+  if (provider !== 'groq' && groq) out.push({ id: `groq:${groqId}`, model: groq(groqId) });
+  if (!out.length) throw new Error('GOOGLE_GENERATIVE_AI_API_KEY is not set');
+  return out;
 }
+
+/** Backwards-compatible single model (first in the list). */
+export function getModel(): LanguageModel {
+  return getModels()[0].model;
+}
+
+/** Total time budget for one question (Vercel function limit is 60 s). */
+const TOTAL_BUDGET_MS = 50_000;
+const FIRST_TRY_MS = 25_000;
 
 export type ChatMessage = { role: 'user' | 'assistant'; content: string };
 export type AgentReply = { text: string; calls: ToolCallRecord[]; drafts: DraftCard[]; requestId: string };
@@ -97,15 +116,34 @@ export async function runAgent(actor: Actor, history: ChatMessage[], now = new D
     return m.role === 'user' ? { role: 'user', content } : { role: 'assistant', content };
   });
 
-  const result = await generateText({
-    model: getModel(),
-    system: systemPrompt(actor, { name: loc?.name ?? 'unknown', weeklyOffs: offs }, now),
-    messages,
-    tools: buildTools(ctx),
-    stopWhen: stepCountIs(MAX_TOOL_CALLS + 1), // ≤5 tool rounds + a final answer; the budget wrapper also hard-limits calls
-    temperature: 0,
-    maxRetries: 1,
-  });
+  // Try each model with a time limit; on a timeout / overload / unknown model, move to the next.
+  const models = getModels();
+  const started = Date.now();
+  let result: Awaited<ReturnType<typeof generateText>> | null = null;
+  let lastError: unknown = null;
+  for (let i = 0; i < models.length && !result; i++) {
+    const remaining = TOTAL_BUDGET_MS - (Date.now() - started);
+    if (remaining < 5_000) break;
+    if (i > 0) { ctx.calls.length = 0; ctx.drafts.length = 0; } // a retry starts clean
+    try {
+      result = await generateText({
+        model: models[i].model,
+        system: systemPrompt(actor, { name: loc?.name ?? 'unknown', weeklyOffs: offs }, now),
+        messages,
+        tools: buildTools(ctx),
+        stopWhen: stepCountIs(MAX_TOOL_CALLS + 1), // ≤5 tool rounds + a final answer; the budget wrapper also hard-limits calls
+        temperature: 0,
+        maxRetries: 0,
+        abortSignal: AbortSignal.timeout(i < models.length - 1 ? Math.min(FIRST_TRY_MS, remaining) : remaining),
+      });
+    } catch (e) {
+      lastError = e;
+      const msg = e instanceof Error ? `${e.name} ${e.message}` : String(e);
+      if (/API key not valid|API_KEY_INVALID|PERMISSION_DENIED/i.test(msg)) throw e; // a bad key won't work on any model
+      console.warn(`agent: model ${models[i].id} failed (${msg.slice(0, 120)}); trying next`);
+    }
+  }
+  if (!result) throw lastError instanceof Error ? lastError : new Error('The assistant timed out');
 
   let text = (result.text ?? '').trim();
   if (!text) text = ctx.calls.length >= MAX_TOOL_CALLS ? 'That needed too many lookups. Please ask a narrower question.' : 'Sorry, I could not answer that.';

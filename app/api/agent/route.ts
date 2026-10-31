@@ -23,7 +23,8 @@ export async function POST(req: Request) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error('agent error', msg);
     if (/API_KEY|is not set/.test(msg)) return Response.json({ error: 'The assistant is not configured yet (missing AI API key).' }, { status: 503 });
-    if (/429|quota|rate|RESOURCE_EXHAUSTED/i.test(msg)) return Response.json({ error: 'The assistant is busy (free-tier limit). Please try again in a minute.' }, { status: 503 });
+    if (/API key not valid|API_KEY_INVALID|PERMISSION_DENIED/i.test(msg)) return Response.json({ error: 'The AI API key was refused by Google. Ask HR to check GOOGLE_GENERATIVE_AI_API_KEY.' }, { status: 503 });
+    if (/429|quota|rate|RESOURCE_EXHAUSTED|503|overloaded|high demand|timed? ?out|abort/i.test(msg)) return Response.json({ error: 'The assistant is busy (free-tier limit). Please try again in a minute.' }, { status: 503 });
     return Response.json({ error: 'The assistant could not answer right now. Please try again.' }, { status: 500 });
   }
 }
