@@ -7,6 +7,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "vercel-build": "tsx scripts/db-deploy.ts && next build",
+    "db:deploy": "tsx --env-file-if-exists=.env.local scripts/db-deploy.ts",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
